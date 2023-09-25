@@ -2,3 +2,7 @@
 tests/
 intermediate_data/
 .idea/
+testing_data/
+scripts/
+docs/
+_test/

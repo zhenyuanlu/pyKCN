@@ -1,11 +1,7 @@
-## pyKCN: A Python Tool for Bridging Scientific Knowledge through Keyword Analysis
+## pyKCN: A *Python* Tool for Bridging Scientific Knowledge through Keyword Analysis
 
 
 <br/>
-
-## Contributor 
-
-
 
 <br/>
 
@@ -32,6 +28,9 @@ If you find our study useful, please cite our paper on XXX:
 ```
 reference here
 ```
+
+## Contributor 
+
 
 ## Contact
 Zhenyuan Lu\
