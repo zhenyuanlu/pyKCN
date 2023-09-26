@@ -33,17 +33,19 @@ class BaseExtractor:
     """
     Base class for data extraction.
     """
-    def __init__(self, data_dir: str, columns_to_extract: list[str], date_column: str = None, date_type: str = 'year'):
+    def __init__(self, data_dir: str, columns_to_extract: list[str] | dict[str, list[str]],
+                 date_column: str = None, date_type: str = 'year'):
         """
         Initialize the data directory, columns to extract, and optional date column.
         :param data_dir: The directory where the data files are located.
-        :param columns_to_extract: List of column names to extract from the data files.
+        :param columns_to_extract: Either a list of columns to extract from all files, or a dictionary mapping
+                                   filenames or file extensions to lists of columns to extract.
         :param date_column: Optional; name of the date column in the data files.
-        :param data_type: Optional; the type of date values in the date column.
+        :param data_type: The type of date values in the date column.
                           Allowed values are 'year', 'numeric', 'strings'. Default is 'year'.
         """
         self.data_dir = data_dir
-        self.columns_to_extract = columns_to_extract
+        self.columns_to_extract = columns_to_extract # Can be either a list or a dictionary
         self.date_column = date_column
         self.date_type = date_type
         self.validate_inputs()
@@ -60,8 +62,8 @@ class BaseExtractor:
     @staticmethod
     def safe_literal_eval(input_str: str) -> any:
         """
-         safely evaluate a Python literal string and convert it to its corresponding Python data type,
-         such as a list, dictionary, tuple, etc., e.g. 'list[str]' -> list[str].
+        Safely evaluate a Python literal string and convert it to its corresponding Python data type,
+        such as a list, dictionary, tuple, etc., e.g. 'list[str]' -> list[str].
         :param input_str: data from columns
         :return: original python data types
         """
@@ -71,13 +73,13 @@ class BaseExtractor:
             return input_str
 
     @staticmethod
-    def extract_year(date:str) -> int | None:
+    def extract_year(date: str) -> int | None:
         """
         Extract the year from a date string, e.g. 02 Oct 2023 --> 2023.
         :param date: The date string to extract the year from.
         :return: The extracted year as an integer or None.
         """
-        year_match = re.search(r'\b\d{4}\b', str(date))
+        year_match = re.search(r'\d{4}', str(date))
         if year_match:
             return int(year_match.group(0))
         return None
@@ -162,62 +164,12 @@ class BaseExtractor:
         """
         Base method for data extraction, intended to be overridden by subclasses.
         """
-    raise NotImplementedError("This method should be overridden by subclasses.")
+        raise NotImplementedError("This method should be overridden by subclasses.")
 
 
-class CSVExtractor(BaseExtractor):
-    """
-    Subclass for extracting data from CSV files.
-    """
-    def __init__(self, data_dir: str, columns_to_extract: list[str], date_column: str = None, date_type: str = 'year'):
-        super().__init__(data_dir, columns_to_extract, date_column, date_type)
-
-    def extract_data(self) -> pd.DataFrame:
-        """
-        Extract and preprocess data from CSV files.
-        :return: Extracted pandas dataframe.
-        """
-        all_data = []
-        # Conditionally include date column
-        selected_columns = self.columns_to_extract + ([self.date_column] if self.date_column else [])
-        for filename in os.listdir(self.data_dir):
-            if filename.endswith('csv'):
-                file_path = os.path.join(self.data_dir, filename)
-                df = pd.read_csv(file_path, usecols=selected_columns, on_bad_lines='skip')
-                df = self.preprocess_dataframe(df)
-                all_data.append(df)
-
-        return pd.concat(all_data, ignore_index = True)
-
-
-class ExcelExtractor(BaseExtractor):
-    """
-    Subclass for extracting data from Excel files.
-    """
-    def __init__(self, data_dir: str, columns_to_extract: list[str], date_columns: str = None, date_type: str = 'year'):
-        super().__init__(data_dir, columns_to_extract, date_columns, date_type)
-
-    def extract_data(self) -> pd.DataFrame:
-        """
-        Extract and preprocess data from Excel files.
-        :return: Extracted pandas dataframe.
-        """
-        all_data = []
-        # Conditionally include date column
-        selected_columns = self.columns_to_extract + ([self.date_column] if self.date_column else [])
-        for filename in os.listdir(self.data_dir):
-            if filename.endswith(('.xls', '.xlsx')):
-                file_path = os.path.join(self.data_dir, filename)
-                df = pd.read_excel(file_path, usecols=selected_columns, header=0)
-                df = self.preprocess_dataframe(df)
-                all_data.append(df)
-
-        return pd.concat(all_data, ignore_index = True)
-
-
-
-
-
+if __name__ == '__main__':
+    PATH = r'E:\research\pyKCN\pyKCN\testing_data'
+    print(os.path.exists(PATH))
 
 
 
