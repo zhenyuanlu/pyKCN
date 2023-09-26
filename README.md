@@ -18,7 +18,9 @@
 ## Get Started
 
 ```
-dependencies here
+python3.11.5
+pandas==2.1.1
+xlrd==2.0.1
 ```
 
 

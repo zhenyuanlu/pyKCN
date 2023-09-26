@@ -9,7 +9,7 @@ class FileExtractor(BaseExtractor):
     Subclass for extracting data from CSV/Excel files.
     """
     def __init__(self, data_dir: str, columns_to_extract: list[str] | dict[str, list[str]],
-                 date_column: str = None, date_type: str = 'year'):
+                 date_column: list | str = None, date_type: str = 'year'):
         super().__init__(data_dir, columns_to_extract, date_column, date_type)
 
     def get_columns_by_filename(self, filename: str) -> set:

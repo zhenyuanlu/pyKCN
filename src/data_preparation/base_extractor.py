@@ -34,7 +34,7 @@ class BaseExtractor:
     Base class for data extraction.
     """
     def __init__(self, data_dir: str, columns_to_extract: list[str] | dict[str, list[str]],
-                 date_column: str = None, date_type: str = 'year'):
+                 date_column: list | str = None, date_type: str = 'year'):
         """
         Initialize the data directory, columns to extract, and optional date column.
         :param data_dir: The directory where the data files are located.
@@ -124,6 +124,23 @@ class BaseExtractor:
 
         return extraction_function(date)
 
+    def determine_date_column(self, df: pd.DataFrame) -> str | None:
+        """
+        Determine the actual date column to use based on DataFrame columns.
+
+        :param df: DataFrame to examine.
+        :return: The name of the date column to use, or None if not found.
+        """
+        if isinstance(self.date_column, list):
+            for col in self.date_column:
+                if col in df.columns:
+                    return col
+            return None # No matching date column found
+        elif isinstance(self.date_column, str):
+            return self.date_column if self.date_column in df.columns else None
+        else:
+            return None
+
     def clean_date_column(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Clean the date column in the DataFrame.
@@ -148,7 +165,8 @@ class BaseExtractor:
         :param df: Pandas data frame input to preprocess.
         :return: Preprocessed data frame.
         """
-        if self.date_column:
+        actual_date_column = self.determine_date_column(df)
+        if actual_date_column:
             df = self.clean_date_column(df)
             # df[self.date_column] = pd.to_numeric(df[self.date_column], errors = 'coerce')
             # df = df.dropna(subset = [self.date_column])
@@ -165,12 +183,6 @@ class BaseExtractor:
         Base method for data extraction, intended to be overridden by subclasses.
         """
         raise NotImplementedError("This method should be overridden by subclasses.")
-
-
-if __name__ == '__main__':
-    PATH = r'E:\research\pyKCN\pyKCN\testing_data'
-    print(os.path.exists(PATH))
-
 
 
 
