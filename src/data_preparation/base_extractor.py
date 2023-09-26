@@ -16,10 +16,10 @@ Classes:
 
 Example:
 --------
->>> csv_extractor = CSVExtractor("/path/to/csv/files", ["column1", "column2"], "date_column")
->>> csv_data = csv_extractor.extract_data()
->>> excel_extractor = ExcelExtractor("/path/to/excel/files", ["column1", "column2"], "date_column")
->>> excel_data = excel_extractor.extract_data()
+# >>> csv_extractor = CSVExtractor("/path/to/csv/files", ["column1", "column2"], "date_column")
+# >>> csv_data = csv_extractor.extract_data()
+# >>> excel_extractor = ExcelExtractor("/path/to/excel/files", ["column1", "column2"], "date_column")
+# >>> excel_data = excel_extractor.extract_data()
 
 """
 
@@ -141,22 +141,23 @@ class BaseExtractor:
         else:
             return None
 
-    def clean_date_column(self, df: pd.DataFrame) -> pd.DataFrame:
+    def clean_date_column(self, df: pd.DataFrame, date_column: str) -> pd.DataFrame:
         """
         Clean the date column in the DataFrame.
         :param df: DataFrame to clean.
+        :param date_column: Name of the date column to clean.
         :return: DataFrame with the cleaned data column.
         """
         # If the date column is already of integer type, no processing is needed
-        if pd.api.types.is_integer_dtype(df[self.date_column]):
+        if pd.api.types.is_integer_dtype(df[date_column]):
             return df
 
         # Otherwise, apply the appropriate extraction function
-        df[self.date_column] = df[self.date_column].apply(self.date_extractor)
+        df[date_column] = df[date_column].apply(self.date_extractor)
 
-        df = df.dropna(subset = [self.date_column])
+        df = df.dropna(subset = [date_column])
         if self.date_type in ['year', 'numeric']:
-            df[self.date_column] = df[self.date_column].astype(int)
+            df[date_column] = df[date_column].astype(int)
         return df
 
     def preprocess_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
@@ -167,7 +168,7 @@ class BaseExtractor:
         """
         actual_date_column = self.determine_date_column(df)
         if actual_date_column:
-            df = self.clean_date_column(df)
+            df = self.clean_date_column(df, actual_date_column)
             # df[self.date_column] = pd.to_numeric(df[self.date_column], errors = 'coerce')
             # df = df.dropna(subset = [self.date_column])
             # df[self.date_column] = df[self.date_column].astype(int)

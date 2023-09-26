@@ -1,3 +1,9 @@
+"""
+FileExtractor Module
+================
+
+"""
+
 
 import os
 import pandas as pd

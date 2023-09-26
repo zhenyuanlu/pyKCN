@@ -1,5 +1,6 @@
 ## pyKCN: A *Python* Tool for Bridging Scientific Knowledge through Keyword Analysis
-
+![badge](https://img.shields.io/badge/version-0.1.0-blue
+)
 
 <br/>
 
