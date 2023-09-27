@@ -124,23 +124,6 @@ class BaseExtractor:
 
         return extraction_function(date)
 
-    def determine_date_column(self, df: pd.DataFrame) -> str | None:
-        """
-        Determine the actual date column to use based on DataFrame columns.
-
-        :param df: DataFrame to examine.
-        :return: The name of the date column to use, or None if not found.
-        """
-        if isinstance(self.date_column, list):
-            for col in self.date_column:
-                if col in df.columns:
-                    return col
-            return None # No matching date column found
-        elif isinstance(self.date_column, str):
-            return self.date_column if self.date_column in df.columns else None
-        else:
-            return None
-
     def clean_date_column(self, df: pd.DataFrame, date_column: str) -> pd.DataFrame:
         """
         Clean the date column in the DataFrame.
@@ -159,6 +142,29 @@ class BaseExtractor:
         if self.date_type in ['year', 'numeric']:
             df[date_column] = df[date_column].astype(int)
         return df
+
+    def determine_date_column(self, df: pd.DataFrame) -> str | None:
+        """
+        Determine the actual date column to use based on DataFrame columns.
+
+        :param df: DataFrame to examine.
+        :return: The name of the date column to use, or None if not found.
+        """
+        if isinstance(self.date_column, list):
+            for col in self.date_column:
+                if col in df.columns:
+                    return col
+            print('No matching date column found: list')
+            return None # No matching date column found
+        elif isinstance(self.date_column, str):
+            if self.date_column in df.columns:
+                return self.date_column
+            else:
+                print('No matching date column found: str')
+                return None
+        else:
+            print('No date column selected: None')
+            return None
 
     def preprocess_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
         """
@@ -179,13 +185,81 @@ class BaseExtractor:
 
         return df
 
-    def extract_data(self) -> pd.DataFrame:
+    def get_columns_by_filename(self, filename: str) -> set:
         """
-        Base method for data extraction, intended to be overridden by subclasses.
+        Get columns to extract based on the filename.
+
+        :param filename: The name of the file.
+        :return: Set of columns to extract.
+        """
+        # Consider various ways a user might refer to a filename
+        possible_keys = {filename, os.path.splitext(filename)[0], filename.split('.')[0]}
+        for key in possible_keys:
+            if key in self.columns_to_extract:
+                return set(self.columns_to_extract[key])
+        return set()
+
+    def get_columns_by_file_extension(self, file_extension: str) -> set:
+        """
+        Get columns to extract based on the file extension.
+
+        :param file_extension: The file extension.
+        :return: List of columns to extract.
+        """
+        # Consider various ways a user might refer to a file extension
+        possible_keys = {file_extension, file_extension.lstrip('.'), '.' + file_extension.lstrip('.')}
+        for key in possible_keys:
+            if key in self.columns_to_extract:
+                return set(self.columns_to_extract[key])
+        return set()
+
+    def determine_columns(self, filename: str) -> set:
+        """
+        Determine which columns to extract based on filename or file extension.
+
+        :param filename: The name of the file.
+        :return: List of columns to extract.
+        """
+        file_extension = os.path.splitext(filename)[1]
+
+        if isinstance(self.columns_to_extract, dict):
+            return (self.get_columns_by_filename(filename)
+                    or self.get_columns_by_file_extension(file_extension))
+        elif isinstance(self.columns_to_extract, list):
+            return set(self.columns_to_extract)
+        else:
+            raise ValueError("columns_to_extract must be either a list or a dictionary.")
+
+    def get_data_sources(self) -> any:
+        """
+        Retrieve data sources, intended to be overridden by subclasses.
         """
         raise NotImplementedError("This method should be overridden by subclasses.")
 
+    def load_data(self, source, potential_columns: set) -> pd.DataFrame | None:
+        """
+        Base method for loading data, intended to be overridden by subclasses.
+        """
+        raise NotImplementedError("This method should be overridden by subclasses.")
 
+    def extract_data(self) -> pd.DataFrame:
+        """
+        Extract and preprocess data.
+        :return: Extracted pandas dataframe.
+        """
+        all_data = []
+        for source in self.get_data_sources():
+            potential_columns = self.determine_columns(source)
+            if potential_columns:
+                df = self.load_data(source, potential_columns)
+                # print(df)
+                if df is not None:
+                    # Include date column if specified
+                    selected_columns = potential_columns.union(
+                        set(self.date_column)) if self.date_column else potential_columns
+                    df = df[selected_columns]
 
-
-
+                    # Call to preprocess_dataframe from BaseExtractor
+                    df = self.preprocess_dataframe(df)
+                    all_data.append(df)
+        return pd.concat(all_data, ignore_index = True)
