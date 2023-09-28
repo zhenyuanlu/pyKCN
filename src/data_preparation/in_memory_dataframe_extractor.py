@@ -1,53 +1,73 @@
+"""
+InMemoryDataFrameExtractor Module
+=================================
+This module provides the InMemoryDataFrameExtractor class, which is a specialized subclass of the BaseExtractor.
+It is designed for extracting data from in-memory pandas DataFrames.
+
+The BaseExtractor class serves as the superclass, containing common functionalities for data extraction and preprocessing.
+
+Classes:
+--------
+- BaseExtractor: Base class for data extraction (imported from another module).
+- InMemoryDataFrameExtractor: Subclass for extracting data from in-memory pandas DataFrames.
+
+Example:
+--------
+# Assuming df is a pandas DataFrame object with relevant columns
+data_mapping = {
+    'corpus_columns': ['Title', 'Keywords'],
+    'date_column': 'Published Date'
+}
+
+# Initialize and use InMemoryDataFrameExtractor
+in_memory_data_extractor = InMemoryDataFrameExtractor(data_frame=df, data_mapping=data_mapping, date_type='year')
+in_memory_data = in_memory_data_extractor.extract_data()
+"""
 
 
-
-import os
+import logging
 import pandas as pd
 from .base_extractor import BaseExtractor
+
+READ_ERROR = 'An error occurred while reading file {} : {}'
 
 
 class InMemoryDataFrameExtractor(BaseExtractor):
     """
     Subclass for extracting data from local data frame.
     """
+
     def __init__(self,
-                 data_source: pd.DataFrame = None,
-                 columns_to_extract: list[str] | dict[str, list[str]] = None,
-                 date_column: list | str = None,
+                 data_frame: pd.DataFrame,
+                 new_column_names: list[str] = None,
+                 corpus_columns: list[str] = None,
+                 date_column: str = None,
                  date_type: str = 'year'):
-        super().__init__(data_source, columns_to_extract, date_column, date_type)
+        super().__init__(data_frame = data_frame,
+                         new_column_names = new_column_names,
+                         corpus_columns = corpus_columns,
+                         date_column = date_column,
+                         date_type = date_type, )
+        self.logger = logging.getLogger(__name__)
 
-    def get_data_sources(self) -> pd.DataFrame:
+    def load_data(self) -> tuple[pd.DataFrame, list[str], str]:
         """
-        Retrieve filenames as data sources from the directory.
-        """
-        return self.data_source
+        Load and preprocess data from the in-memory DataFrame based on the column mapping.
 
-# TODO load data method
-    # def load_data(self, source, potential_columns: set) -> pd.DataFrame | None:
-    #     """
-    #     Read the local data frame and return a DataFrame with the required columns.
-    #     :param source: The data source
-    #     :param potential_columns: Set of potential columns to extract.
-    #     :return: DataFrame with the extracted data or None if an error occurs.
-    #     """
-    #     try:
-    #         preview_df = pd.read_csv(source, nrows = 1) \
-    #             if source.endswith('.csv') \
-    #             else pd.read_excel(source, nrows = 1)
-    #         available_columns = set(preview_df.columns)
-    #         columns_to_use = list(available_columns.intersection(potential_columns))
-    #
-    #         if not columns_to_use:
-    #             print(f"No matching columns found in {source}. Skipping.")
-    #             return None
-    #
-    #         if source.endswith('.csv'):
-    #             return pd.read_csv(source, usecols = columns_to_use, on_bad_lines='skip')
-    #         elif source.endswith(('.xls', '.xlsx')):
-    #             return pd.read_excel(source, usecols = columns_to_use, header=0)
-    #         else:
-    #             return None  # Unsupported file type
-    #     except Exception as e:
-    #         print(f"An error occurred while reading {source}: {e}")
-    #         return None
+        :return: Final concatenated DataFrame, final corpus columns, and final date column.
+        """
+        target_columns = self.corpus_columns + [self.date_column]
+
+        # Extract relevant columns
+        final_df = self.data_frame[target_columns]
+        final_corpus_columns = self.corpus_columns
+        final_date_column = self.date_column
+
+        if self.new_column_names:
+            new_column_mapping = dict(zip(target_columns, self.new_column_names))
+            final_df.rename(columns = new_column_mapping, inplace = True)
+            final_corpus_columns = [new_column_mapping[col] for col in self.corpus_columns]
+            final_date_column = new_column_mapping[self.date_column]
+
+        return final_df, final_corpus_columns, final_date_column
+

@@ -43,6 +43,7 @@ class BaseExtractor:
     Base class for data extraction.
     """
     def __init__(self,
+                 data_frame: pd.DataFrame = None,
                  data_mapping: dict = None,
                  new_column_names: list[str] = None,
                  data_dir: str = None,
@@ -63,6 +64,7 @@ class BaseExtractor:
             TypeError: If the wrong type of data is provided.
             KeyError: If expected keys are not found in data_mapping.
         """
+        self.data_frame = data_frame
         self.data_mapping = data_mapping
         self.new_column_names = new_column_names
         self.data_dir = data_dir
@@ -229,7 +231,7 @@ class BaseExtractor:
             df.loc[:, column] = df[column].apply(lambda x: '; '.join(map(str, x)) if isinstance(x, list) else x)
         return df
 
-    def load_data(self) -> pd.DataFrame | None:
+    def load_data(self) -> tuple[pd.DataFrame, list[str], str]:
         """
         Base method for loading data, intended to be overridden by subclasses.
         """

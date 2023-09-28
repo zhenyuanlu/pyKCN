@@ -7,8 +7,8 @@ from a variety of external data sources.
 
 The BaseExtractor class serves as the superclass that contains common functionalities, including methods for
 preprocessing DataFrames.
-The ExternalExtractor subclass leverages these common functionalities and adds specific methods to interact with
-external data sources.
+
+The ExternalExtractor subclass leverages these common functionalities and adds specific methods to interact with external data sources.
 
 Classes:
 --------
