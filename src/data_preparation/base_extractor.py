@@ -1,26 +1,35 @@
 """
-Extractor Module
-================
-This module provides classes for extracting data from various file formats such as CSV and Excel.
-The BaseExtractor class serves as the superclass that contains common functionalities, including
-methods for preprocessing DataFrames.
+BaseExtractor Module
+====================
+This module provides the BaseExtractor class, which serves as the superclass for various specialized data extractors.
+It includes common functionalities for data extraction and preprocessing that are shared across its subclasses.
 
-Subclasses like CSVExtractor and ExcelExtractor extend BaseExtractor to provide specific functionalities
-for extracting data from CSV and Excel files, respectively.
+Subclasses like ExternalFileExtractor and InMemoryDataFrameExtractor extend BaseExtractor to provide specific functionalities
+for extracting data from external files (CSV, Excel, etc.) and in-memory DataFrames, respectively.
 
 Classes:
 --------
 - BaseExtractor: Base class for data extraction.
-- CSVExtractor: Subclass for extracting data from CSV files.
-- ExcelExtractor: Subclass for extracting data from Excel files.
+- ExternalFileExtractor: Subclass for extracting data from external files like CSV and Excel (defined in another module).
+- InMemoryDataFrameExtractor: Subclass for extracting data from in-memory DataFrames (defined in another module).
 
 Example:
 --------
-# >>> csv_extractor = CSVExtractor("/path/to/csv/files", ["column1", "column2"], "date_column")
-# >>> csv_data = csv_extractor.extract_data()
-# >>> excel_extractor = ExcelExtractor("/path/to/excel/files", ["column1", "column2"], "date_column")
-# >>> excel_data = excel_extractor.extract_data()
+# Define the directory and mapping for data extraction
+data_dir = "/path/to/data/files"
+data_mapping = {
+    'source1': {'corpus_columns': ['Title', 'Keywords'], 'date_column': 'Published Date'},
+    'source2': {'corpus_columns': ['Document Title', 'Tags'], 'date_column': 'Publication Year'}
+}
 
+# Initialize and use ExternalFileExtractor
+external_file_extractor = ExternalFileExtractor(data_mapping=data_mapping, data_dir=data_dir, date_type='year')
+external_data = external_file_extractor.extract_data()
+
+# Initialize and use InMemoryDataFrameExtractor
+# (assuming df is a pandas DataFrame object)
+in_memory_data_extractor = InMemoryDataFrameExtractor(df, ['Title', 'Keywords'], 'Published Date')
+in_memory_data = in_memory_data_extractor.extract_data()
 """
 
 import re
@@ -122,8 +131,6 @@ class BaseExtractor:
         if self.date_type and not isinstance(self.date_type, str):
             raise TypeError("date_type must be a string.")
 
-
-
     @staticmethod
     def safe_literal_eval(input_str: str) -> any:
         """
@@ -189,7 +196,7 @@ class BaseExtractor:
 
         return extraction_function(date)
 
-    def clean_date_column(self, df: pd.DataFrame, date_column: str) -> pd.DataFrame:
+    def process_date_column(self, df: pd.DataFrame, date_column: str) -> pd.DataFrame:
         """
         Clean the date column in the DataFrame.
         :param df: DataFrame to clean.
@@ -201,12 +208,25 @@ class BaseExtractor:
             return df
 
         # Otherwise, apply the appropriate extraction function
-        df[date_column] = df[date_column].apply(self.date_extractor)
+        df.loc[date_column] = df[date_column].apply(self.date_extractor)
 
-        df = df.dropna(subset = [date_column])
         if self.date_type in ['year', 'numeric']:
-            # df.loc[:, date_column] = pd.to_numeric(df.loc[:, date_column], errors = 'coerce')
+            df.loc[:,date_column] = pd.to_numeric(df[date_column], errors = 'coerce')
+            df = df.dropna(subset = [date_column])
+
             df.loc[:, date_column] = df[date_column].astype(int)
+        return df
+
+    def process_corpus_columns(self, df: pd.DataFrame, corpus_columns: list[str]) -> pd.DataFrame:
+        """
+
+        :param df:
+        :param corpus_columns:
+        :return:
+        """
+        for column in corpus_columns:
+            df.loc[:, column] = df[column].apply(self.safe_literal_eval)
+            df.loc[:, column] = df[column].apply(lambda x: '; '.join(map(str, x)) if isinstance(x, list) else x)
         return df
 
     def load_data(self) -> pd.DataFrame | None:
@@ -223,20 +243,10 @@ class BaseExtractor:
         df, corpus_columns, date_column = self.load_data()
 
         if date_column:
-            df[date_column] = pd.to_numeric(df[date_column], errors = 'coerce')
-            df = df.dropna(subset = [date_column])
-            df.loc[:, date_column] = df[date_column].astype(int)
-            df = self.clean_date_column(df, date_column)
-        #     # df[self.date_column] = pd.to_numeric(df[self.date_column], errors = 'coerce')
-        #     df = df.dropna(subset = [self.date_column])
-        #     # df[self.date_column] = df[self.date_column].astype(int)
+            df = self.process_date_column(df, date_column)
 
+        df = self.process_corpus_columns(df, corpus_columns)
 
-        for column in corpus_columns:
-            df.loc[:, column] = df[column].apply(self.safe_literal_eval)
-            df.loc[:, column] = df[column].apply(lambda x: '; '.join(map(str, x)) if isinstance(x, list) else x)
-        #
-        #             # Call to preprocess_dataframe from BaseExtractor
         return df
 
 
