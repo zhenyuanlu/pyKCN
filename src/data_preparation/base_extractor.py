@@ -251,4 +251,13 @@ class BaseExtractor:
 
         return df
 
+    def _log_error(self, error_message: str) -> None:
+        """
+        Log an error message.
+
+        :param error_message: The error message to log.
+        :return: None
+        """
+        raise NotImplementedError("This method should be overridden by subclasses.")
+
 

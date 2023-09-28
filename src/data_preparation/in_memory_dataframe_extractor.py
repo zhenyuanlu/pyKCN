@@ -29,7 +29,7 @@ import logging
 import pandas as pd
 from .base_extractor import BaseExtractor
 
-READ_ERROR = 'An error occurred while reading file {} : {}'
+READ_ERROR = 'An error occurred during data loading: {}'
 
 
 class InMemoryDataFrameExtractor(BaseExtractor):
@@ -56,18 +56,30 @@ class InMemoryDataFrameExtractor(BaseExtractor):
 
         :return: Final concatenated DataFrame, final corpus columns, and final date column.
         """
-        target_columns = self.corpus_columns + [self.date_column]
+        try:
+            target_columns = self.corpus_columns + [self.date_column]
 
-        # Extract relevant columns
-        final_df = self.data_frame[target_columns]
-        final_corpus_columns = self.corpus_columns
-        final_date_column = self.date_column
+            # Extract relevant columns
+            final_df = self.data_frame[target_columns]
+            final_corpus_columns = self.corpus_columns
+            final_date_column = self.date_column
 
-        if self.new_column_names:
-            new_column_mapping = dict(zip(target_columns, self.new_column_names))
-            final_df.rename(columns = new_column_mapping, inplace = True)
-            final_corpus_columns = [new_column_mapping[col] for col in self.corpus_columns]
-            final_date_column = new_column_mapping[self.date_column]
+            if self.new_column_names:
+                new_column_mapping = dict(zip(target_columns, self.new_column_names))
+                final_df.rename(columns = new_column_mapping, inplace = True)
+                final_corpus_columns = [new_column_mapping[col] for col in self.corpus_columns]
+                final_date_column = new_column_mapping[self.date_column]
+            return final_df, final_corpus_columns, final_date_column
+        except Exception as e:
+            self._log_error(READ_ERROR.format(e))
+            return pd.DataFrame(), [], ""
 
-        return final_df, final_corpus_columns, final_date_column
+    def _log_error(self, error_message: str) -> None:
+        """
+        Log an error message.
+
+        :param error_message: The error message to log.
+        :return: None
+        """
+        self.logger.error(error_message)
 
