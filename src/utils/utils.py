@@ -69,7 +69,7 @@ def save_data_from_prep(data: pd.DataFrame,
 
 def update_metadata_from_prep(metadata: dict, filename: str, output_data_dir: str) -> None:
     """
-    Update metadata file with new metadata.
+    Update metadata file of the new generated output data.
 
     :param metadata: Metadata to be added.
     :param output_data_dir: Output data directory for dumping Json file.

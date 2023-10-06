@@ -5,7 +5,7 @@ with open("README.md", "r", encoding="utf-8") as fh:
 
 setup(
     name='pyKCN',
-    version='0.1',
+    version='0.1.0',
     # This will automatically discover and include all packages
     packages=find_packages(),
     install_requires=[
@@ -20,7 +20,7 @@ setup(
     long_description_content_type="text/markdown",
     url='https://github.com/zhenyuanlu/pyKCN',
     classifiers=[
-        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.11',
         'License :: OSI Approved :: MIT License',
         'Development Status :: 1 - Planning',
         'Intended Audience :: Science/Research'
