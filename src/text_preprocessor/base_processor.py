@@ -1,20 +1,13 @@
-import string
 import re
+import string
+
 import pandas as pd
-from unicodedata import normalize
-from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
+from nltk.tokenize import word_tokenize
+from rapidfuzz import fuzz
 from tqdm import tqdm
-from fuzzywuzzy import fuzz
-
-#
-# class ProcessorConfig:
-#     def __init__(self,
-#                  custom_punctuation = r'!"#$%&\'()*+,./:;<=>?@[\\]^_`{|}~',
-#                  default_punctuation = string.punctuation):
-#         self.custom_punctuation = custom_punctuation
-#         self.default_punctuation = default_punctuation
+from unicodedata import normalize
 
 
 class BaseProcessor:
@@ -45,7 +38,12 @@ class BaseProcessor:
         self.default_punctuation_pattern = re.compile('[%s]' % re.escape(self.default_punctuation))
         self.custom_punctuation_pattern = re.compile('[%s]' % re.escape(self.custom_punctuation))
 
-        self.pure_num_pattern = re.compile('^\d+$')
+        # "Hello 456 World" -> "Hello World"
+        self.mix_num_pattern = re.compile(r'^\d+\s|\s\d+\s|\s\d+$')
+        # Standalone num: "12345", "9", "000001"
+        self.pure_num_pattern = re.compile(r'^\d+$')
+        # "abc123def" -> "abcdef"
+        self.all_num_pattern = re.compile(r'\d+')
         self.validate_dataframe()
 
     def validate_dataframe(self):
@@ -86,18 +84,27 @@ class BaseProcessor:
         self.create_temp_col()
         if 'temp_col' in self.dataframe.columns:
             # Before tokenizing, set the description for tqdm's progress bar
-            self.dataframe['temp_col'] = self.apply_with_progress(self.dataframe['temp_col'], self.tokenize_string,
+            self.dataframe['temp_col'] = self.apply_with_progress(self.dataframe['temp_col'],
+                                                                  self.tokenize_string,
                                                                   'Tokenizing...')
-            # self.dataframe['temp_col'] = self.dataframe['temp_col'].progress_apply(self.tokenize_string)
-            self.dataframe['temp_col'] = self.dataframe['temp_col'].apply(self.default_remove_punctuations)
-            self.dataframe['temp_col'] = self.dataframe['temp_col'].apply(self.remove_numbers)
-            self.dataframe['temp_col'] = self.dataframe['temp_col'].apply(self.to_lowercase)
-            self.dataframe['temp_col'] = self.dataframe['temp_col'].apply(self.unicode_normalize)
+            self.dataframe['temp_col'] = self.apply_with_progress(self.dataframe['temp_col'],
+                                                                  self.default_remove_punctuations,
+                                                                  'Removing Punctuation...')
+            self.dataframe['temp_col'] = self.apply_with_progress(self.dataframe['temp_col'],
+                                                                  self.remove_numbers,
+                                                                  'Removing Numbers...')
+            self.dataframe['temp_col'] = self.apply_with_progress(self.dataframe['temp_col'],
+                                                                  self.to_lowercase,
+                                                                  'Lowering Cases...')
+            self.dataframe['temp_col'] = self.apply_with_progress(self.dataframe['temp_col'],
+                                                                  self.unicode_normalize,
+                                                                  'Unicode Normalization...')
+
             self.dataframe['temp_col'] = self.dataframe['temp_col'].apply(' '.join)
             self.dataframe = self.remove_duplicates(self.dataframe, 'temp_col', self.deduplication_threshold)
 
             # Drop the temporary column after deduplication
-            self.dataframe.drop(columns = ['temp_col'], inplace = True)
+            # self.dataframe.drop(columns = ['temp_col'], inplace = True)
         return self.dataframe
 
     def remove_duplicates(self, df: pd.DataFrame, column: str, threshold: float) -> pd.DataFrame:
@@ -111,7 +118,7 @@ class BaseProcessor:
         """
         threshold_percentage = int(threshold * 100)
         if threshold_percentage == 100:
-            return df.drop_duplicates(subset=[column])
+            return df.drop_duplicates(subset = [column])
         else:
             # Deduplicate based on string similarity
             return self.deduplicate_based_on_similarity(df, column, threshold_percentage)
@@ -143,7 +150,8 @@ class BaseProcessor:
 
         for _, row in df.iterrows():
             current_string = row[column]
-            if any(self.is_similar(current_string, checked_string, threshold_percentage) for checked_string in checked_strings):
+            if any(self.is_similar(current_string, checked_string, threshold_percentage) for checked_string in
+                   checked_strings):
                 continue
             checked_strings.append(current_string)
             unique_rows.append(row)

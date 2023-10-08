@@ -6,9 +6,7 @@ import json
 import glob
 from datetime import datetime
 
-
 OUTPUT_DATA_FOLDER_NAME = 'output_data'
-
 
 
 def create_output_data_dir(root_path: str) -> str:

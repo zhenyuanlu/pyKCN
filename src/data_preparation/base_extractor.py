@@ -42,6 +42,7 @@ class BaseExtractor:
     """
     Base class for data extraction.
     """
+
     def __init__(self,
                  data_frame: pd.DataFrame = None,
                  data_mapping: dict = None,
@@ -213,7 +214,7 @@ class BaseExtractor:
         df.loc[date_column] = df[date_column].apply(self.date_extractor)
 
         if self.date_type in ['year', 'numeric']:
-            df.loc[:,date_column] = pd.to_numeric(df[date_column], errors = 'coerce')
+            df.loc[:, date_column] = pd.to_numeric(df[date_column], errors = 'coerce')
             df = df.dropna(subset = [date_column])
 
             df.loc[:, date_column] = df[date_column].astype(int)
@@ -259,5 +260,3 @@ class BaseExtractor:
         :return: None
         """
         raise NotImplementedError("This method should be overridden by subclasses.")
-
-

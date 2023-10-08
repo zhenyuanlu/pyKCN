@@ -24,7 +24,6 @@ in_memory_data_extractor = InMemoryDataFrameExtractor(data_frame=df, data_mappin
 in_memory_data = in_memory_data_extractor.extract_data()
 """
 
-
 import logging
 import pandas as pd
 from .base_extractor import BaseExtractor
@@ -82,4 +81,3 @@ class InMemoryDataFrameExtractor(BaseExtractor):
         :return: None
         """
         self.logger.error(error_message)
-

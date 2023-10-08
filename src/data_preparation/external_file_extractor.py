@@ -176,4 +176,3 @@ class ExternalFileExtractor(BaseExtractor):
         :return: None
         """
         self.logger.error(error_message)
-
