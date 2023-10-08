@@ -2,9 +2,6 @@
 ![badge](https://img.shields.io/badge/version-0.1.0-blue
 )
 
-## Contributors
-[Zhenyuan Lu](https://github.com/zhenyuanlu), [Wei Li](https://github.com/weili-ie), [Burcu Ozek](https://github.com/burcuozek), [Haozhou Zhou](https://github.com/Haozhou98), [Srinivasan Radhakrishnan](https://github.com/srk-srinivasan)
-
 <br/>
 
 <br/>
@@ -38,8 +35,11 @@ reference here
 ```
 
 
+## Contributors
+[Zhenyuan Lu](https://github.com/zhenyuanlu), [Wei Li](https://github.com/weili-ie), [Burcu Ozek](https://github.com/burcuozek), [Haozhou Zhou](https://github.com/Haozhou98), [Srinivasan Radhakrishnan](https://github.com/srk-srinivasan)
 
-## Contact
+
+## Author
 Zhenyuan Lu\
 Northeastern University, Boston\
 Email: lu.zhenyua[at]northeastern[dot]edu
