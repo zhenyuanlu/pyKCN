@@ -78,6 +78,10 @@ class BaseExtractor:
     def validate_inputs(self):
         """
         Validate the initial inputs.
+
+        :raises ValueError: If both sets of parameters or incomplete sets are provided.
+        :raises TypeError: If the wrong type of data is provided.
+        :raises KeyError: If expected keys are not found in data_mapping.
         """
         self._validate_exclusive_parameters()
         self._validate_data_mapping_and_dir()
@@ -87,6 +91,8 @@ class BaseExtractor:
     def _validate_exclusive_parameters(self):
         """
         Ensure either file input or in-memory DataFrame parameters are provided, but not both.
+
+        :raises ValueError: If both sets of parameters or incomplete sets are provided.
         """
         if (self.data_mapping or self.data_dir) and (self.corpus_columns or self.date_column):
             raise ValueError(
@@ -97,6 +103,8 @@ class BaseExtractor:
     def _validate_data_mapping_and_dir(self):
         """
         Validate data_mapping and data_dir.
+
+        :raises ValueError: If both sets of parameters or incomplete sets are provided.
         """
         if self.data_mapping and not self.data_dir:
             raise ValueError("If data_mapping is provided, data_dir must also be provided.")
@@ -104,6 +112,8 @@ class BaseExtractor:
     def _validate_corpus_and_date_columns(self):
         """
         Validate corpus_column and date_column.
+
+        :raises ValueError: If both sets of parameters or incomplete sets are provided.
         """
         if self.corpus_columns and not self.date_column:
             raise ValueError("If corpus_column is provided, date_column must also be provided.")
@@ -111,6 +121,9 @@ class BaseExtractor:
     def _validate_types(self):
         """
         Validate the types of provided parameters.
+
+        :raises TypeError: If the wrong type of data is provided.
+        :raises KeyError: If expected keys are not found in data_mapping.
         """
         if self.data_mapping:
             if not isinstance(self.data_mapping, dict):
@@ -140,6 +153,7 @@ class BaseExtractor:
         """
         Safely evaluate a Python literal string and convert it to its corresponding Python data type,
         such as a list, dictionary, tuple, etc., e.g. 'list[str]' -> list[str].
+
         :param input_str: data from columns
         :return: original python data types
         """
@@ -152,6 +166,7 @@ class BaseExtractor:
     def extract_year_group(date: str) -> int | None:
         """
         Extract the year from a date string, e.g. 02 Oct 2023 --> 2023.
+
         :param date: The date string to extract the year from.
         :return: The extracted year as an integer or None.
         """
@@ -164,6 +179,7 @@ class BaseExtractor:
     def extract_numeric_group(date: str) -> int | None:
         """
         Extract the numeric group from a date string.
+
         :param date: The date string to extract the numeric group from.
         :return: The extracted numeric group as an integer or None.
         """
@@ -176,6 +192,7 @@ class BaseExtractor:
     def extract_string_group(date: str) -> str:
         """
         Extract the string group from a date string.
+
         :param date: The date string to extract the string group from.
         :return: The extracted string group.
         """
@@ -184,6 +201,7 @@ class BaseExtractor:
     def date_extractor(self, date: str) -> any:
         """
         General date extraction method based on date_type.
+
         :param date: Date column.
         :return: Any date groups.
         """
@@ -203,6 +221,7 @@ class BaseExtractor:
     def process_date_column(self, df: pd.DataFrame, date_column: str) -> pd.DataFrame:
         """
         Clean the date column in the DataFrame.
+
         :param df: DataFrame to clean.
         :param date_column: Name of the date column to clean.
         :return: DataFrame with the cleaned data column.
@@ -223,10 +242,11 @@ class BaseExtractor:
 
     def process_corpus_columns(self, df: pd.DataFrame, corpus_columns: list[str]) -> pd.DataFrame:
         """
+        Clean the corpus columns in the DataFrame.
 
-        :param df:
-        :param corpus_columns:
-        :return:
+        :param df: DataFrame to clean.
+        :param corpus_columns: Name of the corpus columns to clean.
+        :return: DataFrame with the cleaned corpus columns.
         """
         for column in corpus_columns:
             df.loc[:, column] = df[column].apply(self.safe_literal_eval)
@@ -236,12 +256,15 @@ class BaseExtractor:
     def load_data(self) -> tuple[pd.DataFrame, list[str], str]:
         """
         Base method for loading data, intended to be overridden by subclasses.
+
+        :return: Final concatenated DataFrame, final corpus columns, and final date column in the subclass.
         """
         raise NotImplementedError("This method should be overridden by subclasses.")
 
     def extract_data(self) -> pd.DataFrame:
         """
         Extract and preprocess data.
+
         :return: Extracted pandas dataframe.
         """
         df, corpus_columns, date_column = self.load_data()

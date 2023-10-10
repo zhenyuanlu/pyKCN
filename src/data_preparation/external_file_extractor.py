@@ -31,7 +31,11 @@ external_data = external_file_extractor.extract_data()
 
 import os
 import logging
+from typing import Tuple, List
+
 import pandas as pd
+from pandas import DataFrame
+
 from .base_extractor import BaseExtractor
 
 # File Constants
@@ -91,7 +95,7 @@ class ExternalFileExtractor(BaseExtractor):
         final_df = pd.concat(all_data, ignore_index = True)
         return final_df, final_corpus_columns, final_date_column
 
-    def _load_data_from_folder(self, folder: str, config: dict) -> tuple[pd.DataFrame, dict, list[str], str]:
+    def _load_data_from_folder(self, folder: str, config: dict) -> tuple[DataFrame | None, list[str], list[str], str]:
         """
         Load data from a specific folder based on its configuration.
 

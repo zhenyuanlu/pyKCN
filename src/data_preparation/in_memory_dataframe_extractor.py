@@ -44,7 +44,6 @@ class InMemoryDataFrameExtractor(BaseExtractor):
         logger (logging.Logger): Logger instance for error logging.
     """
 
-
     def __init__(self,
                  data_frame: pd.DataFrame,
                  new_column_names: list[str] = None,
