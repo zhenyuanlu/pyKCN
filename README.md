@@ -41,5 +41,4 @@ reference here
 
 ## Author
 Zhenyuan Lu\
-Northeastern University, Boston\
 Email: lu.zhenyua[at]northeastern[dot]edu

@@ -1,13 +1,14 @@
 import re
 import string
-
 import pandas as pd
+from tqdm import tqdm
+from rapidfuzz import fuzz
+from unicodedata import normalize
+from collections import defaultdict
+
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.tokenize import word_tokenize
-from rapidfuzz import fuzz
-from tqdm import tqdm
-from unicodedata import normalize
 
 
 class BaseProcessor:
@@ -27,24 +28,36 @@ class BaseProcessor:
         self.columns_to_deduplicate = columns_to_deduplicate
         self.date_column = date_column
         self.custom_delimiter = custom_delimiter
-        self.custom_punctuation = custom_punctuation
-        self.default_punctuation = default_punctuation
         self.deduplication_threshold = deduplication_threshold
         self.word_len_threshold = word_len_threshold
         self.fill_na = fill_na
         self.stemmer = PorterStemmer()
         self.stop_words = set(stopwords.words('english'))
 
-        self.default_punctuation_pattern = re.compile('[%s]' % re.escape(self.default_punctuation))
-        self.custom_punctuation_pattern = re.compile('[%s]' % re.escape(self.custom_punctuation))
+        self.custom_punctuation_pattern = re.compile('[%s]' % re.escape(custom_punctuation))
+        self.default_punctuation_pattern = re.compile('[%s]' % re.escape(default_punctuation))
 
+        # Targets numbers that are standalone or sandwiched between spaces.
         # "Hello 456 World" -> "Hello World"
-        self.mix_num_pattern = re.compile(r'^\d+\s|\s\d+\s|\s\d+$')
-        # Standalone num: "12345", "9", "000001"
-        self.pure_num_pattern = re.compile(r'^\d+$')
-        # "abc123def" -> "abcdef"
-        self.all_num_pattern = re.compile(r'\d+')
+        self.pattern_numbers_with_spaces = re.compile(r'^\d+\s|\s\d+\s|\s\d+$')
+        # Matches numbers that are standalone. "12345", "9", "000001"
+        self.pattern_standalone_numbers = re.compile(r'^\d+$')
+        # Strips all numbers within tokens, even those embedded within text. "abc123def" -> "abcdef"
+        self.pattern_embedded_numbers = re.compile(r'\d+')
+        self.pattern_all_numerics = re.compile(r'^\d+$|\d+')
+
+        self.vocabulary = set()
+        self.stem_to_original = defaultdict(set)
         self.validate_dataframe()
+        self.handle_nan()
+
+    def handle_nan(self):
+        """Handles NaN values based on a strategy."""
+        if self.fill_na is None:
+            self.dataframe.dropna(subset = self.columns_to_process, how = 'all', inplace = True)
+        else:
+            self.dataframe.fillna(self.fill_na, inplace = True)
+        pass
 
     def validate_dataframe(self):
         """Validates the DataFrame structure and types."""
@@ -57,14 +70,6 @@ class BaseProcessor:
         if not all(col in self.dataframe.columns for col in self.columns_to_deduplicate):
             raise ValueError("All columns_to_deduplicate must exist in the DataFrame.")
         # We may add additional validations.
-
-    def handle_nan(self):
-        """Handles NaN values based on a strategy."""
-        if self.fill_na is None:
-            self.dataframe.dropna(subset = self.columns_to_process, how = 'all', inplace = True)
-        else:
-            self.dataframe.fillna(self.fill_na, inplace = True)
-        pass
 
     def apply_custom_operations(self, operations: list):
         """Allows users to apply their own list of operations."""
@@ -79,6 +84,61 @@ class BaseProcessor:
         else:
             print("Skipping deduplication step as no columns_to_deduplicate provided.")
 
+    def create_text_col(self, df: pd.DataFrame, new_col_name = 'target_col') -> pd.DataFrame:
+        if not self.columns_to_process:
+            raise ValueError("No columns provided for processing in columns_to_process.")
+
+        for col in self.columns_to_process:
+            if col not in self.dataframe.columns:
+                raise ValueError(f"Column '{col}' not found in the dataframe.")
+
+        if len(self.columns_to_process) == 1:
+            df[new_col_name] = self.dataframe[self.columns_to_process[0]]
+        else:
+            df[new_col_name] = self.dataframe[self.columns_to_process].apply(
+                lambda row: ','.join(row.dropna().values.astype(str)), axis = 1
+            )
+        # Drop the original columns
+        # df.drop(columns = self.columns_to_process, inplace = True)
+        return df
+
+    @staticmethod
+    def combine_columns(self,
+                        columns_to_combine: list,
+                        new_col_name = 'combined_col') -> pd.DataFrame:
+        """
+        Combine the specified columns into a new column in the dataframe.
+        :param self:
+        :param columns_to_combine:
+        :param new_col_name:
+        :return:
+        """
+
+        if not columns_to_combine:
+            raise ValueError("No columns provided for combination.")
+
+        for col in columns_to_combine:
+            if col not in self.dataframe.columns:
+                raise ValueError(f"Column '{col}' not found in the dataframe.")
+
+        # Check if the new column name already exists
+        original_new_col_name = new_col_name
+        counter = 1
+        while new_col_name in self.dataframe.columns:
+            new_col_name = f"{original_new_col_name}_{counter}"
+            counter += 1
+        if new_col_name != original_new_col_name:
+            print(f"Warning: Column name '{original_new_col_name}' already exists. Using '{new_col_name}' instead.")
+
+        # If only one column is specified, just copy that column
+        if len(columns_to_combine) == 1:
+            self.dataframe[new_col_name] = self.dataframe[columns_to_combine[0]]
+        else:
+            self.dataframe[new_col_name] = self.dataframef[columns_to_combine].apply(
+                lambda row: ','.join(row.dropna().values.astype(str)), axis = 1
+            )
+        return self.dataframe
+
     def process_deduplication(self) -> pd.DataFrame:
         """Overrides the execute_processing method from BaseTextProcessor."""
         self.create_temp_col()
@@ -88,11 +148,13 @@ class BaseProcessor:
                                                                   self.tokenize_string,
                                                                   'Tokenizing...')
             self.dataframe['temp_col'] = self.apply_with_progress(self.dataframe['temp_col'],
-                                                                  self.default_remove_punctuations,
-                                                                  'Removing Punctuation...')
+                                                                  self.remove_punctuation,
+                                                                  'Removing Punctuation...',
+                                                                  punctuation_type = 'default')
             self.dataframe['temp_col'] = self.apply_with_progress(self.dataframe['temp_col'],
                                                                   self.remove_numbers,
-                                                                  'Removing Numbers...')
+                                                                  'Removing Numbers...',
+                                                                  pattern_type = 'all')
             self.dataframe['temp_col'] = self.apply_with_progress(self.dataframe['temp_col'],
                                                                   self.to_lowercase,
                                                                   'Lowering Cases...')
@@ -106,6 +168,35 @@ class BaseProcessor:
             # Drop the temporary column after deduplication
             # self.dataframe.drop(columns = ['temp_col'], inplace = True)
         return self.dataframe
+
+    def split_by_delimiter(self, text):
+        return re.split(self.custom_delimiter, text)
+
+    @staticmethod
+    def tokenize_string(text: str) -> list[str]:
+        """
+        Tokenizes the text in DataFrame.
+        :param text:
+        :return:
+        """
+        return word_tokenize(text)
+
+    @staticmethod
+    def handle_hyphenated_terms(self, tokens):
+        """Process hyphenated words."""
+        return [word for token in tokens for word in re.split(r'-', token)]
+
+    @staticmethod
+    def strip_whitespace(self, tokens):
+        """Strip leading/trailing whitespace from each token."""
+        return [token.strip() for token in tokens]
+
+    def filter_by_length(self, tokens):
+        """Remove tokens based on length."""
+        return [token for token in tokens if len(token) > self.word_len_threshold]
+
+    def process_corpus_columns(self):
+        pass
 
     def remove_duplicates(self, df: pd.DataFrame, column: str, threshold: float) -> pd.DataFrame:
         """
@@ -158,32 +249,58 @@ class BaseProcessor:
 
         return pd.DataFrame(unique_rows)
 
-    @staticmethod
-    def tokenize_string(text: str) -> list[str]:
-        """Tokenizes the text in DataFrame."""
-
-        return word_tokenize(text)
-
-    def remove_numbers(self, tokens: list[str]) -> list[str]:
-        return [token for token in tokens if not self.pure_num_pattern.match(token)]
-
-    def custom_remove_punctuations(self, tokens: list[str]) -> list[str]:
+    # pattern_numbers_with_spaces/pattern_standalone_numbers/pattern_embedded_numbers
+    def remove_numbers(self, tokens: list[str], pattern_type = 'standalone') -> list[str]:
         """
-        Removes punctuation from the text in DataFrame column/s,
-        this is for regular cleaning process.
+        Remove numbers based on the provided patterns.
         :param tokens:
+        :param pattern_type:
         :return:
         """
-        return [self.custom_punctuation_pattern.sub("", token) for token in tokens]
+        valid_pattern_types = ["spaces", "standalone", "embedded", "all"]
+        if pattern_type not in valid_pattern_types:
+            raise ValueError(f"Invalid pattern_type. Choose from {', '.join(valid_pattern_types)}.")
 
-    def default_remove_punctuations(self, tokens: list[str]) -> list[str]:
+        if pattern_type == "spaces":
+            return [token for token in tokens if not self.pattern_numbers_with_spaces.match(token)]
+        elif pattern_type == "standalone":
+            return [token for token in tokens if not self.pattern_standalone_numbers.match(token)]
+        elif pattern_type == "embedded":
+            return [re.sub(self.pattern_embedded_numbers, '', token) for token in tokens]
+        elif pattern_type == "all":
+            processed_tokens = []
+            for token in tokens:
+                # Remove numbers using the combined pattern
+                token_without_numbers = re.sub(self.pattern_all_numerics, '', token)
+                if token_without_numbers:  # Check to ensure token is not empty
+                    processed_tokens.append(token_without_numbers.strip())
+            return processed_tokens
+
+    def remove_punctuation(self, tokens: list[str], punctuation_type = 'default') -> list[str]:
         """
         Removes punctuation from the text in DataFrame column/s,
-        this is for deduplication process.
         :param tokens:
+        :param punctuation_type:
         :return:
         """
-        return [self.default_punctuation_pattern.sub("", token) for token in tokens]
+        if punctuation_type == 'custom':
+            return [self.custom_punctuation_pattern.sub("", token) for token in tokens]
+        else:  # Default
+            return [self.default_punctuation_pattern.sub("", token) for token in tokens]
+
+    def stem_tokens(self, tokens):
+        """Apply stemming."""
+        if self.stemmer:
+            return [self.stemmer.stem(token) for token in tokens]
+        return tokens
+
+    def final_cleanup(self, tokens):
+        """Final cleanup operations: stripping and removing None values."""
+        return [token.strip() for token in tokens if token and token.strip()]
+
+    def rejoin_terms(self, tokens):
+        """Join cleaned tokens back into a single string."""
+        return ' '.join(tokens)
 
     @staticmethod
     def to_lowercase(tokens: list[str]) -> list[str]:
@@ -195,8 +312,14 @@ class BaseProcessor:
         """Perform Unicode normalization."""
         return [normalize('NFKD', token) for token in tokens]
 
+    def update_vocabulary_and_dictionary(self, original_tokens, stemmed_tokens):
+        for orig, stem in zip(original_tokens, stemmed_tokens):
+            self.vocabulary.add(orig)
+            self.stem_to_original[stem].add(orig)
+
     @staticmethod
-    def apply_with_progress(df: pd.DataFrame, function, description) -> pd.DataFrame:
+    def apply_with_progress(df: pd.DataFrame, function, description, *args, **kwargs) -> pd.DataFrame:
         tqdm.pandas(desc = description)
-        df = df.progress_apply(function)
+        df = df.progress_apply(lambda x: function(x, *args, **kwargs))
         return df
+
