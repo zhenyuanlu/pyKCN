@@ -1,9 +1,10 @@
-import nltk
-from nltk.stem import PorterStemmer
-from nltk.tokenize import word_tokenize
 import re
-import pandas as pd
 import string
+import pandas as pd
+from tqdm import tqdm
+from unicodedata import normalize
+from collections import defaultdict
+
 from base_processor import BaseProcessor
 
 
@@ -19,6 +20,12 @@ class TokenProcessor(BaseProcessor):
     def split_by_delimiter(self, text):
         """Split string by the specified delimiters."""
         return re.split(self.delimiter_pattern, text)
+
+
+    def update_vocabulary_and_dictionary(self, original_tokens, stemmed_tokens):
+        for orig, stem in zip(original_tokens, stemmed_tokens):
+            self.vocabulary.add(orig)
+            self.stem_to_original[stem].add(orig)
 
     def tokenize_content(self, text):
         """Tokenize using NLTK."""

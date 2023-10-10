@@ -116,39 +116,10 @@ class BaseProcessor:
     def execute_processor(self) -> pd.DataFrame:
         """
         Base method for executing the processor, intended to be overridden by subclasses.
+
         :return: Processed pandas dataframe
         """
         raise NotImplementedError("This method should be overridden by subclasses.")
-
-    def process_deduplication(self) -> pd.DataFrame:
-        """Overrides the execute_processing method from BaseTextProcessor."""
-        self.combine_columns(self.columns_to_deduplicate, new_col_name = 'temp_col')
-        if 'temp_col' in self.dataframe.columns:
-            # Before tokenizing, set the description for tqdm's progress bar
-            self.dataframe['temp_col'] = self.apply_with_progress(self.dataframe['temp_col'],
-                                                                  self.tokenize_string,
-                                                                  'Tokenizing...')
-            self.dataframe['temp_col'] = self.apply_with_progress(self.dataframe['temp_col'],
-                                                                  self.remove_punctuation,
-                                                                  'Removing Punctuation...',
-                                                                  punctuation_type = 'default')
-            self.dataframe['temp_col'] = self.apply_with_progress(self.dataframe['temp_col'],
-                                                                  self.remove_numbers,
-                                                                  'Removing Numbers...',
-                                                                  pattern_type = 'all')
-            self.dataframe['temp_col'] = self.apply_with_progress(self.dataframe['temp_col'],
-                                                                  self.to_lowercase,
-                                                                  'Lowering Cases...')
-            self.dataframe['temp_col'] = self.apply_with_progress(self.dataframe['temp_col'],
-                                                                  self.unicode_normalize,
-                                                                  'Unicode Normalization...')
-
-            self.dataframe['temp_col'] = self.dataframe['temp_col'].apply(' '.join)
-            self.dataframe = self.remove_duplicates(self.dataframe, 'temp_col', self.deduplication_threshold)
-
-            # Drop the temporary column after deduplication
-            # self.dataframe.drop(columns = ['temp_col'], inplace = True)
-        return self.dataframe
 
     def split_by_delimiter(self, text):
         return re.split(self.custom_delimiter, text)
@@ -178,57 +149,6 @@ class BaseProcessor:
 
     def process_corpus_columns(self):
         pass
-
-    def remove_duplicates(self, df: pd.DataFrame, column: str, threshold: float) -> pd.DataFrame:
-        """
-        Deduplicate a DataFrame based on exact matches or string similarity.
-
-        :param df: DataFrame to deduplicate.
-        :param column: Column to check for duplicates.
-        :param threshold: If 1.0, perform exact deduplication. Otherwise, use string similarity.
-        :return: Deduplicated DataFrame.
-        """
-        threshold_percentage = int(threshold * 100)
-        if threshold_percentage == 100:
-            return df.drop_duplicates(subset = [column])
-        else:
-            # Deduplicate based on string similarity
-            return self.deduplicate_based_on_similarity(df, column, threshold_percentage)
-
-    @staticmethod
-    def is_similar(string1: str, string2: str, threshold_percentage: int) -> bool:
-        """
-        Check if two strings are similar based on a given threshold.
-
-        :param string1: First string.
-        :param string2: Second string.
-        :param threshold_percentage: Similarity threshold.
-        :return: Boolean indicating if strings are similar.
-        """
-        # Levenshtein Distance
-        return fuzz.ratio(string1, string2) >= threshold_percentage
-
-    def deduplicate_based_on_similarity(self, df: pd.DataFrame, column: str, threshold_percentage: int) -> pd.DataFrame:
-        """
-        Deduplicate a DataFrame based on string similarity.
-
-        :param df: Input DataFrame.
-        :param column: Column to check for duplicates.
-        :param threshold_percentage: Similarity threshold.
-        :return: Deduplicated DataFrame.
-        """
-        unique_rows = []
-        checked_strings = []
-
-        for _, row in df.iterrows():
-            current_string = row[column]
-            if any(self.is_similar(current_string, checked_string, threshold_percentage) for checked_string in
-                   checked_strings):
-                continue
-            checked_strings.append(current_string)
-            unique_rows.append(row)
-
-        return pd.DataFrame(unique_rows)
 
     # pattern_numbers_with_spaces/pattern_standalone_numbers/pattern_embedded_numbers
     def remove_numbers(self, tokens: list[str], pattern_type = 'standalone') -> list[str]:
@@ -275,12 +195,13 @@ class BaseProcessor:
             return [self.stemmer.stem(token) for token in tokens]
         return tokens
 
-    def final_cleanup(self, tokens):
+    @staticmethod
+    def final_cleanup(tokens):
         """Final cleanup operations: stripping and removing None values."""
         return [token.strip() for token in tokens if token and token.strip()]
 
     @staticmethod
-    def rejoin_terms(self, tokens):
+    def rejoin_terms(tokens):
         """Join cleaned tokens back into a single string."""
         return ' '.join(tokens)
 
@@ -294,10 +215,6 @@ class BaseProcessor:
         """Perform Unicode normalization."""
         return [normalize('NFKD', token) for token in tokens]
 
-    def update_vocabulary_and_dictionary(self, original_tokens, stemmed_tokens):
-        for orig, stem in zip(original_tokens, stemmed_tokens):
-            self.vocabulary.add(orig)
-            self.stem_to_original[stem].add(orig)
 
     @staticmethod
     def apply_with_progress(df: pd.DataFrame, function, description, *args, **kwargs) -> pd.DataFrame:
