@@ -6,40 +6,28 @@ from .base_processor import BaseProcessor
 
 
 class DeduplicationProcessor(BaseProcessor):
+    DEDUPLICATION_STEPS = [
+        {"description": "Tokenizing...", "function": "tokenize_string", "args": {}},
+        {"description": "Removing Punctuation...", "function": "remove_punctuation",
+         "args": {"punctuation_type": "default"}},
+        {"description": "Removing Numbers...", "function": "remove_numbers", "args": {"pattern_type": "all"}},
+        {"description": "Lowering Cases...", "function": "to_lowercase", "args": {}},
+        {"description": "Unicode Normalization...", "function": "unicode_normalize", "args": {}},
+    ]
+
     def __init__(self,
                  dataframe: pd.DataFrame,
-                 columns_to_process: list[str],
                  columns_to_deduplicate: list[str] = None,
-                 date_column: str = 'date_col',
-                 custom_delimiter: str = r',; - /()',
-                 custom_punctuation: str = r'!"#$%&\'()*+,./:;<=>?@[\\]^_`{|}~',
-                 default_punctuation: str = string.punctuation,
                  deduplication_threshold: float = 1.0,
-                 word_len_threshold: int = 2,
+                 new_col_name = 'temp_col',
                  fill_na: str = None):
-        """
-
-        :param dataframe:
-        :param columns_to_process:
-        :param columns_to_deduplicate:
-        :param date_column:
-        :param custom_delimiter:
-        :param custom_punctuation:
-        :param default_punctuation:
-        :param deduplication_threshold:
-        :param word_len_threshold:
-        :param fill_na:
-        """
-        super().__init__(dataframe,
-                         columns_to_process,
-                         columns_to_deduplicate,
-                         date_column,
-                         custom_delimiter,
-                         custom_punctuation,
-                         default_punctuation,
-                         deduplication_threshold,
-                         word_len_threshold,
-                         fill_na)
+        super().__init__(dataframe = dataframe,
+                         columns_to_deduplicate = columns_to_deduplicate,
+                         deduplication_threshold = deduplication_threshold,
+                         fill_na = fill_na)
+        self.handle_nan(mode_type = 'deduplication')
+        self.pipeline = self.DEDUPLICATION_STEPS
+        self.new_col_name = new_col_name
 
     @staticmethod
     def is_similar(string1: str, string2: str, threshold_percentage: int) -> bool:
@@ -94,31 +82,24 @@ class DeduplicationProcessor(BaseProcessor):
 
     def execute_processor(self) -> pd.DataFrame:
         """Overrides the execute_processing method from BaseTextProcessor."""
-        self.combine_columns(self.columns_to_deduplicate, new_col_name = 'temp_col')
-        if 'temp_col' in self.dataframe.columns:
-            # Before tokenizing, set the description for tqdm's progress bar
-            self.dataframe['temp_col'] = self.apply_with_progress(self.dataframe['temp_col'],
-                                                                  self.tokenize_string,
-                                                                  'Tokenizing...')
-            self.dataframe['temp_col'] = self.apply_with_progress(self.dataframe['temp_col'],
-                                                                  self.remove_punctuation,
-                                                                  'Removing Punctuation...',
-                                                                  punctuation_type = 'default')
-            self.dataframe['temp_col'] = self.apply_with_progress(self.dataframe['temp_col'],
-                                                                  self.remove_numbers,
-                                                                  'Removing Numbers...',
-                                                                  pattern_type = 'all')
-            self.dataframe['temp_col'] = self.apply_with_progress(self.dataframe['temp_col'],
-                                                                  self.to_lowercase,
-                                                                  'Lowering Cases...')
-            self.dataframe['temp_col'] = self.apply_with_progress(self.dataframe['temp_col'],
-                                                                  self.unicode_normalize,
-                                                                  'Unicode Normalization...')
+        self.combine_columns(self.columns_to_deduplicate, new_col_name = self.new_col_name)
+        new_col_name = self.new_col_name
 
-            self.dataframe['temp_col'] = self.dataframe['temp_col'].apply(' '.join)
-            self.dataframe = self.remove_duplicates(self.dataframe, 'temp_col', self.deduplication_threshold)
+        if new_col_name in self.dataframe.columns:
+            for step in self.pipeline:
+                description = step["description"]
+                function = getattr(self, step["function"])
+                args = step["args"]
+
+                self.dataframe[new_col_name] = self.apply_with_progress(self.dataframe[new_col_name],
+                                                                        function,
+                                                                        description,
+                                                                        **args)
+
+            # Join tokens and handle deduplication after processing
+            self.dataframe[new_col_name] = self.dataframe[new_col_name].apply(' '.join)
+            self.dataframe = self.remove_duplicates(self.dataframe, new_col_name, self.deduplication_threshold)
 
             # Drop the temporary column after deduplication
-            # self.dataframe.drop(columns = ['temp_col'], inplace = True)
+            # self.dataframe.drop(columns = [new_col_name], inplace = True)
         return self.dataframe
-

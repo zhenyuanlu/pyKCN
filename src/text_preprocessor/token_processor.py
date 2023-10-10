@@ -9,13 +9,27 @@ from base_processor import BaseProcessor
 
 
 class TokenProcessor(BaseProcessor):
-    def __init__(self, dataframe, columns_to_process, word_len_threshold=2, stemming=True, delimiter_pattern=r"[;,-/]"):
-        super().__init__(dataframe)
-        self.columns_to_process = columns_to_process
-        self.word_len_threshold = word_len_threshold
-        self.stemming = stemming
-        self.delimiter_pattern = delimiter_pattern
-        self.stemmer = PorterStemmer()
+    def __init__(self,
+                 dataframe: pd.DataFrame,
+                 columns_to_process: list[str],
+                 columns_to_deduplicate: list[str] = None,
+                 date_column: str = 'date_col',
+                 custom_delimiter: str = r',; - /()',
+                 custom_punctuation: str = r'!"#$%&\'()*+,./:;<=>?@[\\]^_`{|}~',
+                 default_punctuation: str = string.punctuation,
+                 deduplication_threshold: float = 1.0,
+                 word_len_threshold: int = 2,
+                 fill_na: str = None):
+        super().__init__(dataframe,
+                         columns_to_process,
+                         columns_to_deduplicate,
+                         date_column,
+                         custom_delimiter,
+                         custom_punctuation,
+                         default_punctuation,
+                         deduplication_threshold,
+                         word_len_threshold,
+                         fill_na)
 
     def split_by_delimiter(self, text):
         """Split string by the specified delimiters."""
@@ -157,7 +171,7 @@ class TextProcessor(BaseProcessor):
             tokens = self.to_lowercase(tokens)
 
             # 8. Remove punctuations
-            tokens = self.default_remove_punctuations(tokens)
+            tokens = self.remove_punctuation(tokens)
 
             # Store original tokens for updating vocabulary and dictionary
             original_tokens = tokens.copy()

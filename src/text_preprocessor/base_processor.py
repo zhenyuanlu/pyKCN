@@ -14,7 +14,7 @@ from nltk.tokenize import word_tokenize
 class BaseProcessor:
     def __init__(self,
                  dataframe: pd.DataFrame,
-                 columns_to_process: list[str],
+                 columns_to_process: list[str] = None,
                  columns_to_deduplicate: list[str] = None,
                  date_column: str = 'date_col',
                  custom_delimiter: str = r',; - /()',
@@ -49,16 +49,24 @@ class BaseProcessor:
         self.vocabulary = set()
         self.stem_to_original = defaultdict(set)
         self.validate_dataframe()
-        self.handle_nan()
 
-    def handle_nan(self):
-        """Handles NaN values based on a strategy."""
+    def handle_nan(self, mode_type = 'deduplication'):
+        """
+        Handles NaN values based on a process.
+
+        :param mode_type: Specifies the mode for NaN handling. Accepted values are 'deduplication' and 'processing'.
+                          Based on this mode, the appropriate columns are targeted for NaN handling.
+                          Default is 'deduplication'.
+        :return: None. The dataframe is modified in-place.
+        """
+        # Columns to target based on mode_type
+        target_columns = self.columns_to_deduplicate if mode_type == 'deduplication' else self.columns_to_process
+
+        # Apply the NaN handling strategy
         if self.fill_na is None:
-            self.dataframe.dropna(subset = self.columns_to_process, how = 'all', inplace = True)
-            self.dataframe.dropna(subset = self.columns_to_deduplicate, how = 'all', inplace = True)
+            self.dataframe.dropna(subset = target_columns, how = 'all', inplace = True)
         else:
-            self.dataframe.fillna(self.fill_na, inplace = True)
-        pass
+            self.dataframe[target_columns].fillna(self.fill_na, inplace = True)
 
     def validate_dataframe(self):
         """Validates the DataFrame structure and types."""
@@ -66,10 +74,10 @@ class BaseProcessor:
             raise TypeError("dataframe should be a Pandas DataFrame")
         if self.dataframe.empty:
             raise ValueError("The DataFrame should not be empty.")
-        if not all(col in self.dataframe.columns for col in self.columns_to_process):
-            raise ValueError("All columns_to_process must exist in the DataFrame.")
-        if not all(col in self.dataframe.columns for col in self.columns_to_deduplicate):
-            raise ValueError("All columns_to_deduplicate must exist in the DataFrame.")
+        # if not all(col in self.dataframe.columns for col in self.columns_to_process):
+        #     raise ValueError("All columns_to_process must exist in the DataFrame.")
+        # if not all(col in self.dataframe.columns for col in self.columns_to_deduplicate):
+        #     raise ValueError("All columns_to_deduplicate must exist in the DataFrame.")
         # We may add additional validations.
 
     def apply_custom_operations(self, operations: list):
@@ -78,13 +86,13 @@ class BaseProcessor:
             self.dataframe[self.columns_to_process] = self.dataframe[self.columns_to_process].applymap(operation)
 
     def combine_columns(self,
-                        columns_to_combine: list,
+                        columns_to_combine: list[str],
                         new_col_name = 'target_col') -> None:
         """
         Combine the specified columns into a new column in the dataframe.
-        :param self:
-        :param columns_to_combine:
-        :param new_col_name:
+
+        :param columns_to_combine: The target columns for combination.
+        :param new_col_name: The new column name with default value, 'target_col'.
         :return:
         """
 
