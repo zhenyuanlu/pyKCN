@@ -53,17 +53,18 @@ class BaseExtractor:
                  date_type: str = 'year'):
         """
         Initialize the BaseExtractor class.
-        Parameters:
-            data_mapping (dict, optional): Mapping for file inputs.
-            data_dir (str, optional): Parent directory for file inputs.
-            corpus_columns (list[str], optional): Columns for in-memory DataFrame.
-            date_column (str, optional): Date columns for in-memory DataFrame.
-            date_type (str, optional): Type of date, default is 'year'.
 
-        Raises:
-            ValueError: If both sets of parameters or incomplete sets are provided.
-            TypeError: If the wrong type of data is provided.
-            KeyError: If expected keys are not found in data_mapping.
+        :param data_frame: Input data frame.
+        :param data_mapping: Mapping between folders and their column configurations.
+        :param new_column_names: Custom names for columns.
+        :param data_dir: Directory where the data folders are located.
+        :param corpus_columns: Columns for in-memory DataFrame.
+        :param date_column: Date columns for in-memory DataFrame.
+        :param date_type: Type of date information ('year', 'numeric', or 'string').
+
+        :raises ValueError: If both sets of parameters or incomplete sets are provided.
+        :raises TypeError: If the wrong type of data is provided.
+        :raises KeyError: If expected keys are not found in data_mapping.
         """
         self.data_frame = data_frame
         self.data_mapping = data_mapping

@@ -53,10 +53,20 @@ class ExternalFileExtractor(BaseExtractor):
     """
 
     def __init__(self,
-                 data_mapping,
-                 data_dir,
-                 new_column_names = None,
-                 date_type = 'year'):
+                 data_mapping: dict[str] | None = None,
+                 data_dir: str = None,
+                 new_column_names: list[str] | None = None,
+                 date_type: str = 'year'):
+        """
+        Initialize the ExternalFileExtractor class.
+
+        :param data_mapping: Mapping between folders and their column configurations.
+        :param data_dir: Directory where the data folders are located.
+        :param new_column_names: Custom names for columns.
+        :param date_type: Type of date information ('year', 'numeric', or 'string').
+
+        :raise LoggingError: If an error occurs while logging.
+        """
         super().__init__(data_mapping = data_mapping,
                          data_dir = data_dir,
                          new_column_names = new_column_names,
@@ -131,7 +141,7 @@ class ExternalFileExtractor(BaseExtractor):
 
     def _get_new_column_names(self,
                               corpus_columns: list[str],
-                              date_column: str) -> tuple[dict, list[str], str]:
+                              date_column: str) -> tuple[list[str], list[str], str]:
         """
         Generate new column names based on provided or default values.
 

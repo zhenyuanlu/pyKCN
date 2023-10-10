@@ -81,3 +81,101 @@ class TokenProcessor(BaseProcessor):
         return self.dataframe
 
 
+from collections import defaultdict
+from nltk.stem import PorterStemmer
+from nltk.tokenize import word_tokenize
+import re
+import pandas as pd
+
+
+class TextProcessor(BaseProcessor):
+    def __init__(self, dataframe, columns_to_process, word_len_threshold = 2):
+        super().__init__(dataframe, columns_to_process)
+        self.word_len_threshold = word_len_threshold
+        self.vocabulary = set()
+        self.stem_to_original = defaultdict(set)
+        self.stemmer = PorterStemmer()
+
+    def split_by_delimiter(self, text):
+        return re.split(r'[;,-/]', text)
+
+    def handle_hyphenated_terms(self, tokens):
+        return [term for token in tokens for term in re.split(r'-', token)]
+
+    def strip_whitespace(self, tokens):
+        return [token.strip() for token in tokens]
+
+    def remove_numericals(self, tokens):
+        return [token for token in tokens if not token.isdigit()]
+
+    def filter_by_length(self, tokens):
+        return [token for token in tokens if len(token) > self.word_len_threshold]
+
+    def stem_tokens(self, tokens):
+        return [self.stemmer.stem(token) for token in tokens]
+
+    def update_vocabulary_and_dictionary(self, original_tokens, stemmed_tokens):
+        for orig, stem in zip(original_tokens, stemmed_tokens):
+            self.vocabulary.add(orig)
+            self.stem_to_original[stem].add(orig)
+
+    def process_column(self, column_name):
+        # Get the column data
+        column_data = self.dataframe[column_name]
+
+        # List to store processed data
+        processed_data = []
+
+        # Iterate over each record in the column
+        for record in column_data:
+            # 1. Split by delimiter
+            tokens = self.split_by_delimiter(record)
+
+            # 2. Tokenize content
+            tokens = word_tokenize(' '.join(tokens))
+
+            # 3. Handle hyphenated terms
+            tokens = self.handle_hyphenated_terms(tokens)
+
+            # 4. Strip whitespace
+            tokens = self.strip_whitespace(tokens)
+
+            # 5. Remove numerical values
+            tokens = self.remove_numericals(tokens)
+
+            # 6. Filter by length
+            tokens = self.filter_by_length(tokens)
+
+            # 7. Convert to lowercase
+            tokens = self.to_lowercase(tokens)
+
+            # 8. Remove punctuations
+            tokens = self.default_remove_punctuations(tokens)
+
+            # Store original tokens for updating vocabulary and dictionary
+            original_tokens = tokens.copy()
+
+            # 9. Stem tokens
+            stemmed_tokens = self.stem_tokens(tokens)
+
+            # 10. Final cleanup
+            original_tokens = self.strip_whitespace(original_tokens)
+            stemmed_tokens = self.strip_whitespace(stemmed_tokens)
+
+            # 11. Join tokens
+            original_record = ', '.join(original_tokens)
+            stemmed_record = ', '.join(stemmed_tokens)
+
+            # Update vocabulary and dictionary
+            self.update_vocabulary_and_dictionary(original_tokens, stemmed_tokens)
+
+            # Append processed record to processed_data
+            processed_data.append(original_record)
+
+        # Update the dataframe column with processed data
+        self.dataframe[column_name] = processed_data
+
+        return self.dataframe
+
+# Note: I've not included the implementation of the parent class (BaseProcessor) here,
+# as it's expected to be in the provided 'base_processor.py'.

@@ -34,7 +34,16 @@ READ_ERROR = 'An error occurred during data loading: {}'
 class InMemoryDataFrameExtractor(BaseExtractor):
     """
     Subclass for extracting data from local data frame.
+
+    Attributes:
+        data_frame (pd.DataFrame): Input data frame.
+        new_column_names (list[str], optional): Custom names for columns.
+        corpus_columns (list[str], optional): Columns for in-memory DataFrame.
+        date_column (str, optional): Date columns for in-memory DataFrame.
+        date_type (str, optional): Type of date information ('year', 'numeric', or 'string').
+        logger (logging.Logger): Logger instance for error logging.
     """
+
 
     def __init__(self,
                  data_frame: pd.DataFrame,
@@ -42,6 +51,17 @@ class InMemoryDataFrameExtractor(BaseExtractor):
                  corpus_columns: list[str] = None,
                  date_column: str = None,
                  date_type: str = 'year'):
+        """
+        Initialize the InMemoryDataFrameExtractor instance.
+
+        :param data_frame: Input data frame.
+        :param new_column_names: Custom names for columns.
+        :param corpus_columns: Columns for in-memory DataFrame.
+        :param date_column: Date columns for in-memory DataFrame.
+        :param date_type: Type of date information ('year', 'numeric', or 'string').
+
+        :raise LoggingError: If an error occurs while logging.
+        """
         super().__init__(data_frame = data_frame,
                          new_column_names = new_column_names,
                          corpus_columns = corpus_columns,

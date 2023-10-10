@@ -55,6 +55,7 @@ class BaseProcessor:
         """Handles NaN values based on a strategy."""
         if self.fill_na is None:
             self.dataframe.dropna(subset = self.columns_to_process, how = 'all', inplace = True)
+            self.dataframe.dropna(subset = self.columns_to_deduplicate, how = 'all', inplace = True)
         else:
             self.dataframe.fillna(self.fill_na, inplace = True)
         pass
@@ -76,36 +77,9 @@ class BaseProcessor:
         for operation in operations:
             self.dataframe[self.columns_to_process] = self.dataframe[self.columns_to_process].applymap(operation)
 
-    def create_temp_col(self):
-        if self.columns_to_deduplicate:
-            self.dataframe['temp_col'] = self.dataframe[self.columns_to_deduplicate].apply(
-                lambda row: ','.join(row.dropna().values.astype(str)), axis = 1
-            )
-        else:
-            print("Skipping deduplication step as no columns_to_deduplicate provided.")
-
-    def create_text_col(self, df: pd.DataFrame, new_col_name = 'target_col') -> pd.DataFrame:
-        if not self.columns_to_process:
-            raise ValueError("No columns provided for processing in columns_to_process.")
-
-        for col in self.columns_to_process:
-            if col not in self.dataframe.columns:
-                raise ValueError(f"Column '{col}' not found in the dataframe.")
-
-        if len(self.columns_to_process) == 1:
-            df[new_col_name] = self.dataframe[self.columns_to_process[0]]
-        else:
-            df[new_col_name] = self.dataframe[self.columns_to_process].apply(
-                lambda row: ','.join(row.dropna().values.astype(str)), axis = 1
-            )
-        # Drop the original columns
-        # df.drop(columns = self.columns_to_process, inplace = True)
-        return df
-
-    @staticmethod
     def combine_columns(self,
                         columns_to_combine: list,
-                        new_col_name = 'combined_col') -> pd.DataFrame:
+                        new_col_name = 'target_col') -> None:
         """
         Combine the specified columns into a new column in the dataframe.
         :param self:
@@ -134,14 +108,21 @@ class BaseProcessor:
         if len(columns_to_combine) == 1:
             self.dataframe[new_col_name] = self.dataframe[columns_to_combine[0]]
         else:
-            self.dataframe[new_col_name] = self.dataframef[columns_to_combine].apply(
+            self.dataframe[new_col_name] = self.dataframe[columns_to_combine].apply(
                 lambda row: ','.join(row.dropna().values.astype(str)), axis = 1
             )
-        return self.dataframe
+        # return self.dataframe
+
+    def execute_processor(self) -> pd.DataFrame:
+        """
+        Base method for executing the processor, intended to be overridden by subclasses.
+        :return: Processed pandas dataframe
+        """
+        raise NotImplementedError("This method should be overridden by subclasses.")
 
     def process_deduplication(self) -> pd.DataFrame:
         """Overrides the execute_processing method from BaseTextProcessor."""
-        self.create_temp_col()
+        self.combine_columns(self.columns_to_deduplicate, new_col_name = 'temp_col')
         if 'temp_col' in self.dataframe.columns:
             # Before tokenizing, set the description for tqdm's progress bar
             self.dataframe['temp_col'] = self.apply_with_progress(self.dataframe['temp_col'],
@@ -298,6 +279,7 @@ class BaseProcessor:
         """Final cleanup operations: stripping and removing None values."""
         return [token.strip() for token in tokens if token and token.strip()]
 
+    @staticmethod
     def rejoin_terms(self, tokens):
         """Join cleaned tokens back into a single string."""
         return ' '.join(tokens)
@@ -322,4 +304,3 @@ class BaseProcessor:
         tqdm.pandas(desc = description)
         df = df.progress_apply(lambda x: function(x, *args, **kwargs))
         return df
-
