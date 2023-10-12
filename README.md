@@ -23,7 +23,7 @@ python3.11.5
 pandas==2.1.1
 xlrd==2.0.1
 nltk==3.8.1
-fuzzywuzzy
+rapidfuzz
 ```
 
 
@@ -36,9 +36,10 @@ reference here
 
 
 ## Contributors
+
 [Zhenyuan Lu](https://github.com/zhenyuanlu), [Wei Li](https://github.com/weili-ie), [Burcu Ozek](https://github.com/burcuozek), [Haozhou Zhou](https://github.com/Haozhou98), [Srinivasan Radhakrishnan](https://github.com/srk-srinivasan)
 
 
 ## Author
-Zhenyuan Lu\
+[Zhenyuan Lu](https://zhenyuanlu.com/)\
 Email: lu.zhenyua[at]northeastern[dot]edu
