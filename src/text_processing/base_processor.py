@@ -53,7 +53,7 @@ class BaseProcessor:
         self.validate_dataframe()
 
         self.STRING_TO_LIST_METHODS = {self.split_by_delimiter, self.tokenize_string, self.handle_hyphenated_terms}
-        self.LIST_TO_STRING_METHODS = {self.rejoin_terms}
+        self.LIST_TO_STRING_METHODS = {}
 
     def handle_nan(self, mode_type = 'deduplication'):
         """
@@ -143,9 +143,6 @@ class BaseProcessor:
     def handle_hyphenated_terms(self, tokens):
         return self._text_input_handler(tokens, self._handle_hyphens_in_single_token)
 
-    def strip_whitespace(self, tokens):
-        return self._text_input_handler(tokens, self._strip_whitespace_from_single_token)
-
     def filter_by_length(self, tokens):
         return self._text_input_handler(tokens, self._filter_by_length_single_token)
 
@@ -195,8 +192,14 @@ class BaseProcessor:
     def remove_angle_brackets(self, tokens):
         return self._text_input_handler(tokens, self._remove_angle_brackets_single_string)
 
+    def strip_whitespace(self, tokens):
+        return self._text_input_handler(tokens, self._strip_whitespace_from_single_token)
+
     def final_cleanup(self, tokens: str) -> str:
         return self._text_input_handler(tokens, self._final_cleanup_single_token)
+
+    def cleanup(self, tokens: list[str]) -> list[str]:
+        return [cleaned for cleaned in (self._cleanup_single_token(token) for token in tokens) if cleaned]
 
     @staticmethod
     def apply_with_progress(data: pd.DataFrame | str | list, function, description, *args,
@@ -258,13 +261,14 @@ class BaseProcessor:
     def _tokenize_single_string(text: str) -> list[str]:
         return word_tokenize(text)
 
-    @staticmethod
-    def _handle_hyphens_in_single_token(token: str) -> list[str]:
-        return [word for part in re.split(r'-', token) for word in part.split()]
+    # @staticmethod
+    # def _handle_hyphens_in_single_token(token: str) -> list[str]:
+    #     return [word for part in re.split(r'-', token) for word in part.split()]
 
     @staticmethod
-    def _strip_whitespace_from_single_token(token: str) -> str:
-        return token.strip()
+    def _handle_hyphens_in_single_token(token: str) -> list[str]:
+        """Split the token by hyphen and return the resulting parts."""
+        return token.split('-')
 
     def _filter_by_length_single_token(self, token: str) -> str:
         return token if len(token) > self.word_len_threshold else ''
@@ -324,8 +328,17 @@ class BaseProcessor:
         return re.sub(r'[^\x00-\x7F]+', '', text)
 
     @staticmethod
-    def _final_cleanup_single_token(self, token: str) -> str | None:
+    def _strip_whitespace_from_single_token(token: str) -> str:
+        return token.strip()
+
+    @staticmethod
+    def _final_cleanup_single_token(token: str) -> str | None:
         if token is None:
             return None
+        cleaned_token = token.strip()
+        return cleaned_token if cleaned_token else None
+
+    @staticmethod
+    def _cleanup_single_token(token: str) -> str | None:
         cleaned_token = token.strip()
         return cleaned_token if cleaned_token else None

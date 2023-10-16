@@ -4,6 +4,14 @@
 
 <br/>
 
+
+Our team has previously published a series of related papers that laid the groundwork for the development of this tool. Here are those publications:
+
+- Srinivasan Radhakrishnan *et al.* [Novel keyword co-occurrence network-based methods to foster systematic reviews of scientific literature](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0172778)
+- Burcu Ozek *et al.* [Analysis of pain research literature through keyword Co-occurrence networks](https://journals.plos.org/digitalhealth/article?id=10.1371/journal.pdig.0000331)
+- Sachini Weerasekara *et al.* [Trends in adopting industry 4.0 for asset life cycle management for sustainability: a keyword Co-occurrence network review and analysis](https://www.mdpi.com/2071-1050/14/19/12233)
+
+
 <br/>
 
 ## Abstract

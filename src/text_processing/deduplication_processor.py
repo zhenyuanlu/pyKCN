@@ -8,14 +8,14 @@ from .base_processor import BaseProcessor
 class DeduplicationProcessor(BaseProcessor):
 
     DEDUPLICATION_STEPS = [
+        {"description": "Removing Angle Bracket Pattern...", "function": "remove_angle_brackets", "args": {}},
         {"description": "Lowering Cases...", "function": "to_lowercase", "args": {}},
         {"description": "Unicode Normalization...", "function": "unicode_normalize", "args": {}},
+        {"description": "Removing Non ASCII...", "function": "remove_non_ascii", "args": {}},
         # {"description": "Tokenizing...", "function": "tokenize_string", "args": {}},
         {"description": "Removing Punctuation...", "function": "remove_punctuation",
          "args": {"punctuation_type": "default"}},
         {"description": "Removing Numbers...", "function": "remove_numbers", "args": {"pattern_type": "all"}},
-        {"description": "Removing Non ASCII...", "function": "remove_non_ascii", "args": {}},
-        {"description": "Removing Angle Bracket Pattern...", "function": "remove_angle_brackets", "args": {}},
     ]
 
     def __init__(self,
@@ -104,6 +104,6 @@ class DeduplicationProcessor(BaseProcessor):
             self.dataframe = self.remove_duplicates(self.dataframe, new_col_name, self.deduplication_threshold)
 
             # Drop the temporary column after deduplication
-            # self.dataframe.drop(columns = [new_col_name], inplace = True)
+            self.dataframe.drop(columns = [new_col_name], inplace = True)
             # self.dataframe.drop(columns = ['col_1', 'col_2'], inplace = True)
         return self.dataframe
