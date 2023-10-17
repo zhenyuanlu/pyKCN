@@ -5,9 +5,9 @@
 
 <br/>
 
-<div style="text-align:center">
-  <img src="logo.png" width="50%" alt="pyKCN logo"/>
-</div>
+<center>
+  <img align='center' src="logo.png" width="50%" alt="pyKCN logo"/>
+</center>
 
 <br/>
 
