@@ -52,8 +52,9 @@ class BaseProcessor:
         self.stem_to_original = defaultdict(set)
         self.validate_dataframe()
 
-        self.STRING_TO_LIST_METHODS = {self.split_by_delimiter, self.tokenize_string, self.handle_hyphenated_terms}
-        self.LIST_TO_STRING_METHODS = {}
+        self.STRING_TO_LIST_METHODS = {}
+        # self.STRING_TO_LIST_METHODS = {self.split_by_delimiter, self.tokenize_string, self.handle_hyphenated_terms}
+        self.LIST_TO_STRING_METHODS = {self._handle_hyphens_in_single_token}
 
     def handle_nan(self, mode_type = 'deduplication'):
         """
@@ -140,6 +141,27 @@ class BaseProcessor:
     def tokenize_string(self, text):
         return self._text_input_handler(text, self._tokenize_single_string)
 
+    # def handle_hyphenated_terms(self, tokens):
+    #     return self._text_input_handler(tokens, self._handle_hyphens_in_single_token)
+
+    # def handle_hyphenated_terms(self, tokens):
+    #     """Process hyphenated words."""
+    #     processed_data = self._text_input_handler(tokens, self._handle_hyphens_in_single_token)
+    #
+    #     if isinstance(tokens, str):
+    #         return processed_data
+    #
+    #     # Flatten the inner list structure resulting from hyphen splits
+    #     if isinstance(tokens, list) and all(isinstance(item, str) for item in tokens):
+    #         return [term for sublist in processed_data for term in sublist]
+    #
+    #     # For a list of lists of strings
+    #     flattened_data = []
+    #     for sublist in processed_data:
+    #         flattened_sublist = [term for subsublist in sublist for term in subsublist]
+    #         flattened_data.append(flattened_sublist)
+    #     return flattened_data
+
     def handle_hyphenated_terms(self, tokens):
         return self._text_input_handler(tokens, self._handle_hyphens_in_single_token)
 
@@ -195,8 +217,11 @@ class BaseProcessor:
     def strip_whitespace(self, tokens):
         return self._text_input_handler(tokens, self._strip_whitespace_from_single_token)
 
+    def remove_stopwords(self, tokens):
+        return self._text_input_handler(tokens, self._remove_stopwords_from_token)
+
     def final_cleanup(self, tokens: str) -> str:
-        return self._text_input_handler(tokens, self._final_cleanup_single_token)
+        return self._text_input_handler(tokens, self._cleanup_single_token)
 
     def cleanup(self, tokens: list[str]) -> list[str]:
         return [cleaned for cleaned in (self._cleanup_single_token(token) for token in tokens) if cleaned]
@@ -218,37 +243,68 @@ class BaseProcessor:
 # ==================================
 # Text input handler
 # ==================================
-    def _text_input_handler(self, input_data, processing_function, *args, **kwargs):
-        if processing_function in self.STRING_TO_LIST_METHODS:
-            return self._apply_transformation(input_data, self._process_string_to_list, processing_function, *args, **kwargs)
-        elif processing_function in self.LIST_TO_STRING_METHODS:
-            return self._apply_transformation(input_data, self._process_list_to_string, processing_function, *args, **kwargs)
-        else:
-            return self._apply_transformation(input_data, self._process_string, processing_function, *args, **kwargs)
 
-    def _apply_transformation(self, input_data, processing_func, *args, **kwargs):
+    def _text_input_handler(self, input_data, processing_function, *args, **kwargs):
+        # Apply transformations
+        transformed_data = self._apply_transformation(input_data, processing_function, *args, **kwargs)
+
+        # Adjust data structure
+        if processing_function in self.STRING_TO_LIST_METHODS:
+            return self._wrap_strings_in_list(transformed_data)
+        elif processing_function in self.LIST_TO_STRING_METHODS:
+            return self._remove_extra_nesting(transformed_data)
+        else:
+            return transformed_data
+
+    def _apply_transformation(self, input_data, processing_function, *args, **kwargs):
         if isinstance(input_data, str):
-            processed_data = processing_func(input_data, *args, **kwargs)
+            processed_data = processing_function(input_data, *args, **kwargs)
             return processed_data if processed_data else ''
         elif isinstance(input_data, list) and all(isinstance(item, str) for item in input_data):
-            processed_data  = [processing_func(item, *args, **kwargs) for item in input_data]
+            processed_data  = [processing_function(item, *args, **kwargs) for item in input_data]
             return [item for item in processed_data if item]
         elif isinstance(input_data, list) and all(isinstance(sublist, list) for sublist in input_data):
-            processed_data = [self._apply_transformation(sublist, processing_func, *args, **kwargs) for sublist in input_data]
+            processed_data = [self._apply_transformation(sublist, processing_function, *args, **kwargs)
+                              for sublist in input_data]
             return [sublist for sublist in processed_data if sublist]
         else:
             raise ValueError("Invalid input type.")
 
-    @staticmethod
-    def _process_string(text, processing_function, *args, **kwargs):
-        return processing_function(text, *args, **kwargs)
+    def _wrap_strings_in_list(self, data):
+        """Increase the level of nested lists by wrapping strings in a list."""
+        if isinstance(data, str):
+            return [data]
+        elif isinstance(data, list) and all(isinstance(item, str) for item in data):
+            return [[item] for item in data]
+        elif isinstance(data, list) and all(isinstance(sublist, list) for sublist in data):
+            return [self._wrap_strings_in_list(sublist) for sublist in data]
+        else:
+            raise ValueError("Invalid data type for _increase_list_level.")
 
-    def _process_string_to_list(self, text, processing_function, *args, **kwargs):
-        return self._process_string(text, processing_function, *args, **kwargs)
+    @staticmethod
+    def _flatten_one_level(data):
+        """Flatten the list by one level."""
+        if isinstance(data, list) and all(isinstance(item, list) for item in data):
+            return [item for sublist in data for item in sublist]
+        else:
+            return data
 
     @staticmethod
-    def _process_list_to_string(tokens, processing_function, *args, **kwargs):
-        return processing_function(tokens, *args, **kwargs)
+    def _remove_extra_nesting(nested_list: list) -> list:
+        """
+        Flattens one level of nesting in a list, but retains the top-level structure.
+        """
+        flattened = []
+        for sublist in nested_list:
+            new_sublist = []
+            for item in sublist:
+                if isinstance(item, list):
+                    new_sublist.extend(item)
+                else:
+                    new_sublist.append(item)
+            flattened.append(new_sublist)
+        return flattened
+
 
 # ==================================
 # Helper Methods
@@ -261,14 +317,27 @@ class BaseProcessor:
     def _tokenize_single_string(text: str) -> list[str]:
         return word_tokenize(text)
 
-    # @staticmethod
-    # def _handle_hyphens_in_single_token(token: str) -> list[str]:
-    #     return [word for part in re.split(r'-', token) for word in part.split()]
-
     @staticmethod
     def _handle_hyphens_in_single_token(token: str) -> list[str]:
         """Split the token by hyphen and return the resulting parts."""
         return token.split('-')
+
+    @staticmethod
+    def _handle_hyphens_in_list(self, tokens: list) -> list:
+        """
+        Handle hyphens in a list of tokens. If we use remove_extra_nesting above,
+        then we can remove this method.
+
+        :param tokens: List of tokens
+        :return: List of tokens with hyphens handled
+        """
+        processed_tokens = []
+        for token in tokens:
+            if '-' in token:
+                processed_tokens.extend(token.split('-'))
+            else:
+                processed_tokens.append(token)
+        return processed_tokens
 
     def _filter_by_length_single_token(self, token: str) -> str:
         return token if len(token) > self.word_len_threshold else ''
@@ -296,14 +365,14 @@ class BaseProcessor:
             cleaned_token = re.sub(pattern, ' ', token)
             if cleaned_token.strip():
                 return re.sub(r'\s+', ' ', cleaned_token)
-        return ""
+        return ''
 
     def _remove_punctuation_single_token(self, token: str, punctuation_type: str = 'default') -> str:
         """Removes punctuation from a single token."""
         if punctuation_type == 'custom':
-            cleaned_token = self.custom_punctuation_pattern.sub("", token)
+            cleaned_token = self.custom_punctuation_pattern.sub('', token)
         else:  # Default
-            cleaned_token = self.default_punctuation_pattern.sub("", token)
+            cleaned_token = self.default_punctuation_pattern.sub('', token)
 
         return cleaned_token
 
@@ -331,14 +400,12 @@ class BaseProcessor:
     def _strip_whitespace_from_single_token(token: str) -> str:
         return token.strip()
 
-    @staticmethod
-    def _final_cleanup_single_token(token: str) -> str | None:
-        if token is None:
-            return None
-        cleaned_token = token.strip()
-        return cleaned_token if cleaned_token else None
+    def _remove_stopwords_from_token(self, token: str) -> str:
+        return token if token not in self.stop_words else ''
 
     @staticmethod
     def _cleanup_single_token(token: str) -> str | None:
+        if token is None:
+            return None
         cleaned_token = token.strip()
         return cleaned_token if cleaned_token else None

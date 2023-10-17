@@ -4,6 +4,11 @@
 
 <br/>
 
+<div style="text-align:center">
+  <img src="logo.png" width="80%" alt="insert abstract image"/>
+</div>
+
+<br/>
 
 Our team has previously published a series of related papers that laid the groundwork for the development of this tool. Here are those publications:
 
@@ -17,9 +22,7 @@ Our team has previously published a series of related papers that laid the groun
 ## Abstract
 
 
-<div style="text-align:center">
-  <img src="empty.svg" width="100%" alt="insert abstract image"/>
-</div>
+
 
 [ Abstract Here]
 
