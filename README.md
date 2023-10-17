@@ -1,11 +1,12 @@
 ## pyKCN: A *Python* Tool for Bridging Scientific Knowledge through Keyword Analysis
+
 ![badge](https://img.shields.io/badge/version-0.1.0-blue
 )
 
 <br/>
 
 <div style="text-align:center">
-  <img src="logo.png" width="80%" alt="insert abstract image"/>
+  <img src="logo.png" width="50%" alt="pyKCN logo"/>
 </div>
 
 <br/>
