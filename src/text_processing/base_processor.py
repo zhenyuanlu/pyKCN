@@ -2,7 +2,6 @@ import re
 import string
 import pandas as pd
 from tqdm import tqdm
-from rapidfuzz import fuzz
 from unicodedata import normalize, combining
 from collections import defaultdict
 

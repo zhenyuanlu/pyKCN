@@ -73,3 +73,7 @@ reference here
 ## Author
 [Zhenyuan Lu](https://zhenyuanlu.com/)\
 Email: lu.zhenyua[at]northeastern[dot]edu
+
+## License
+
+This project is licensed under the terms of the MIT license.

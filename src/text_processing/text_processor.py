@@ -9,6 +9,7 @@ from collections import defaultdict
 from .base_processor import BaseProcessor
 from ..utils.utils import save_data_from_prep, load_data_from_prep
 
+# Steps
 # 'machine-learning method; lstm, deep learning'
 # ['machine-learning method', 'lstm', 'deep learning']
 # [['machine-learning', 'method'], [lstm], ['deep', ' learning']]
@@ -88,7 +89,6 @@ class TextProcessor(BaseProcessor):
                                                                       new_col_name, pipeline)
 
             # After the first pipeline, create the new columns 'original_data' and 'stemmed_data'
-            # This is just an example; replace with your actual logic to generate these columns.
             self.dataframe['original_data'] = self.dataframe[new_col_name].copy()
             self.dataframe['stemmed_data'] = self.dataframe[new_col_name].copy()
 
@@ -97,7 +97,6 @@ class TextProcessor(BaseProcessor):
                 self.dataframe[column] = self._process_pipeline(self.dataframe, column, pipeline)
 
             # Drop the columns that are not needed
-
             cols_to_keep = self.columns_to_process + ['original_data', 'stemmed_data']
             cols_to_drop = set(self.dataframe.columns) - set(cols_to_keep)
             self.dataframe.drop(columns = cols_to_drop, inplace = True)
