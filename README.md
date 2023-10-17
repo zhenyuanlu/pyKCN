@@ -1,9 +1,11 @@
 
-<br/>
+<p style="line-height:25px;margin:0px;"><br></p>
 
 <p align="center">
-  <img align='center' src="logo.png" width="60%" alt="pyKCN logo"/>
+  <img align='center' src="logo.png" width="70%" alt="pyKCN logo"/>
 </p>
+
+<p style="line-height:25px;margin:0px;"><br></p>
 
 <p align="center">
     <b>pyKCN: A <em>Python</em> Tool for Bridging Scientific Knowledge through Keyword Analysis</b>
