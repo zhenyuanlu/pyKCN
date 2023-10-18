@@ -2,6 +2,42 @@
 TextProcessor
 =============
 
+Description:
+------------
+
+
+Example:
+--------
+Example 1: Basic Usage
+
+
+text_processor = TextProcessor(dataframe,
+                                columns_to_process = ['column_1', 'column_2'],
+                                cache_location = 'CACHE_LOCATION', cache_format = 'csv')
+processed_df = text_processor.execute_processor()
+
+
+Example 2: Load Deduplicated Pipeline Data and Save Processed Data
+
+from src.utils.utils import load_data_from_prep, save_data_from_prep
+PARENT_PATH = r'path\to\parent\folder'
+CACHE_LOCATION = r'path\to\cache\folder'
+DATA_TYPE = 'deduplicated'
+PIPELINE_NAME = 'PIPELINE_NAME'
+
+dataframe = load_data_from_prep(pipeline_name = PIPELINE_NAME,
+                                 data_type = DATA_TYPE,
+                                 root_path = PARENT_PATH,
+                                 filename = None)
+
+text_processor = TextProcessor(dataframe,
+                                columns_to_process = ['column_1', 'column_2'],
+                                cache_location = 'CACHE_LOCATION', cache_format = 'csv')
+processed_df = text_processor.execute_processor()
+
+save_data_from_prep(df, pipeline_name = PIPELINE_NAME,
+                    data_type = 'processed',
+                    root_path = PARENT_PATH)
 
 """
 
