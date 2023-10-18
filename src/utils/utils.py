@@ -4,6 +4,7 @@ import pandas as pd
 import logging
 import json
 import glob
+import importlib
 from datetime import datetime
 
 OUTPUT_DATA_FOLDER_NAME = 'output_data'
@@ -122,3 +123,11 @@ def load_data_from_prep(pipeline_name: str = None,
     except Exception as e:
         logging.error(f"An error occurred while loading extracted data: {e}")
         return None
+
+
+def is_package_installed(pkg_name: str) -> bool:
+    try:
+        importlib.import_module(pkg_name)
+        return True
+    except ImportError:
+        return False

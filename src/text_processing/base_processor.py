@@ -1,9 +1,31 @@
+"""
+BaseProcessor Module
+====================
+This module contains the `BaseProcessor` class, a core foundation for various data processing tasks
+within text-rich datasets. With an emphasis on preprocessing and cleaning text data, the `BaseProcessor`
+furnishes a suite of methods tailored for string manipulations, token handling, and common data
+transformation procedures. It is designed to be extended by more specialized processors that may
+cater to niche requirements.
+
+Classes:
+--------
+- BaseProcessor: A base class providing foundational functionalities for text data processing.
+- DeduplicationProcessor: A subclass focused on detecting and eliminating duplicate entries from datasets.
+- TextProcessor: A subclass that emphasizes more comprehensive text processing procedures.
+
+Examples:
+---------
+(See subclasses for more examples)
+
+
+"""
+
+
 import re
 import string
 import pandas as pd
 from tqdm import tqdm
 from unicodedata import normalize, combining
-from collections import defaultdict
 
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
@@ -23,6 +45,20 @@ class BaseProcessor:
                  deduplication_threshold: float = 1.0,
                  word_len_threshold: int = 2,
                  fill_na: str = None):
+        """
+        Initialize the BaseProcessor with given parameters.
+
+        :param dataframe: Input data in pandas DataFrame format.
+        :param columns_to_process: List of column names that need to be processed.
+        :param columns_to_deduplicate: List of column names that need to be deduplicated.
+        :param date_column: Name of the date column.
+        :param custom_delimiter: Custom delimiter for splitting strings.
+        :param custom_punctuation: Custom punctuation to remove from strings.
+        :param default_punctuation: Default punctuation to remove from strings.
+        :param deduplication_threshold: Threshold for deduplication.
+        :param word_len_threshold: Threshold for word length.
+        :param fill_na: Value to replace NaN values with.
+        """
         self.dataframe = dataframe.copy()
         self.columns_to_process = columns_to_process
         self.columns_to_deduplicate = columns_to_deduplicate
@@ -47,12 +83,10 @@ class BaseProcessor:
         # Strips all numbers within tokens, even those embedded within text. "abc123def" -> "abcdef"
         self.pattern_all_numerics = re.compile(r'\d+')
 
-        self.vocabulary = set()
-        self.stem_to_original = defaultdict(set)
         self.validate_dataframe()
-
+        # For methods that convert strings to lists.
         self.STRING_TO_LIST_METHODS = {}
-        # self.STRING_TO_LIST_METHODS = {self.split_by_delimiter, self.tokenize_string, self.handle_hyphenated_terms}
+        # For methods that convert lists to strings, e.g. hyphenated terms.
         self.LIST_TO_STRING_METHODS = {self._handle_hyphens_in_single_token}
 
     def handle_nan(self, mode_type = 'deduplication'):
@@ -74,19 +108,24 @@ class BaseProcessor:
             self.dataframe[target_columns].fillna(self.fill_na, inplace = True)
 
     def validate_dataframe(self):
-        """Validates the DataFrame structure and types."""
+        """
+        Validates the DataFrame structure and types.
+
+        :return: None
+        """
         if not isinstance(self.dataframe, pd.DataFrame):
             raise TypeError("dataframe should be a Pandas DataFrame")
         if self.dataframe.empty:
             raise ValueError("The DataFrame should not be empty.")
-        # if not all(col in self.dataframe.columns for col in self.columns_to_process):
-        #     raise ValueError("All columns_to_process must exist in the DataFrame.")
-        # if not all(col in self.dataframe.columns for col in self.columns_to_deduplicate):
-        #     raise ValueError("All columns_to_deduplicate must exist in the DataFrame.")
-        # We may add additional validations.
+        # May add additional validations.
 
     def apply_custom_operations(self, operations: list):
-        """Allows users to apply their own list of operations."""
+        """
+        Allows users to apply their own list of operations.
+
+        :param operations: List of functions to apply to the dataframe.
+        :return: None. The dataframe is modified in-place.
+        """
         for operation in operations:
             self.dataframe[self.columns_to_process] = self.dataframe[self.columns_to_process].applymap(operation)
 
@@ -98,7 +137,7 @@ class BaseProcessor:
 
         :param columns_to_combine: The target columns for combination.
         :param new_col_name: The new column name with default value, 'target_col'.
-        :return:
+        :return: None. The dataframe is modified in-place.
         """
 
         if not columns_to_combine:
@@ -124,53 +163,52 @@ class BaseProcessor:
             self.dataframe[new_col_name] = self.dataframe[columns_to_combine].apply(
                 lambda row: ','.join(row.dropna().values.astype(str)), axis = 1
             )
-        # return self.dataframe
 
     def execute_processor(self) -> pd.DataFrame:
         """
-        Base method for executing the processor, intended to be overridden by subclasses.
+        Execute the data processing pipeline. This is a base method that should be overridden
+        by specific data processing subclasses.
 
         :return: Processed pandas dataframe
         """
         raise NotImplementedError("This method should be overridden by subclasses.")
 
-    def split_by_delimiter(self, text):
+    def split_by_delimiter(self, text: str) -> list[str]:
+        """
+        Split a given text/string by the specified custom delimiter.
+
+        :param text: The input text/string.
+        :return: List of substrings after splitting by delimiter.
+        """
         return self._text_input_handler(text, self._split_single_string)
 
-    def tokenize_string(self, text):
+    def tokenize_string(self, text: list[str]) -> list[str]:
+        """
+        Tokenize a given text into words.
+
+        :param text: The input text/string.
+        :return:  List of tokens/words.
+        """
         return self._text_input_handler(text, self._tokenize_single_string)
 
-    # def handle_hyphenated_terms(self, tokens):
-    #     return self._text_input_handler(tokens, self._handle_hyphens_in_single_token)
+    def handle_hyphenated_terms(self, tokens: list[str]) -> list[str]:
+        """
+        Handle hyphenated terms in the given tokens. We put _handle_hyphens_in_single_token in the
+        LIST_TO_STRING_METHODS set so that we can remove the extra nesting in the list of tokens.
 
-    # def handle_hyphenated_terms(self, tokens):
-    #     """Process hyphenated words."""
-    #     processed_data = self._text_input_handler(tokens, self._handle_hyphens_in_single_token)
-    #
-    #     if isinstance(tokens, str):
-    #         return processed_data
-    #
-    #     # Flatten the inner list structure resulting from hyphen splits
-    #     if isinstance(tokens, list) and all(isinstance(item, str) for item in tokens):
-    #         return [term for sublist in processed_data for term in sublist]
-    #
-    #     # For a list of lists of strings
-    #     flattened_data = []
-    #     for sublist in processed_data:
-    #         flattened_sublist = [term for subsublist in sublist for term in subsublist]
-    #         flattened_data.append(flattened_sublist)
-    #     return flattened_data
-
-    def handle_hyphenated_terms(self, tokens):
+        :param tokens: List of tokens to process.
+        :return: List of tokens with hyphenated terms handled.
+        """
         return self._text_input_handler(tokens, self._handle_hyphens_in_single_token)
 
-    def filter_by_length(self, tokens):
+    def filter_by_length(self, tokens: list[str]) -> list[str]:
         return self._text_input_handler(tokens, self._filter_by_length_single_token)
 
     # pattern_numbers_with_spaces/pattern_standalone_numbers/pattern_embedded_numbers
     def remove_numbers(self, tokens: list[str], pattern_type: str = 'all') -> list[str]:
         """
         Remove numbers from the tokens based on the provided patterns.
+
         :param tokens: List of tokens
         :param pattern_type: The pattern type for number removal
         :return: Tokens with numbers removed
@@ -183,8 +221,15 @@ class BaseProcessor:
         # Use the _text_input_handler to process the tokens
         return self._text_input_handler(tokens, self._remove_numbers_from_single_token, pattern_type)
 
-    def remove_punctuation(self, data, punctuation_type = 'default'):
-        return self._text_input_handler(data, self._remove_punctuation_single_token,
+    def remove_punctuation(self, text: str | list[str], punctuation_type = 'default') -> str | list[str]:
+        """
+        Remove punctuation from the given data based on the specified type.
+
+        :param text: The input text (can be a list or a string).
+        :param punctuation_type: Type of punctuation removal pattern ('custom' or 'default').
+        :return: Data with punctuation removed.
+        """
+        return self._text_input_handler(text, self._remove_punctuation_single_token,
                                         punctuation_type = punctuation_type)
 
     def stem_tokens(self, tokens):

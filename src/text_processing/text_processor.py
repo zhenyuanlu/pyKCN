@@ -1,13 +1,13 @@
-import copy
-import re
-import string
-import pandas as pd
-from tqdm import tqdm
-from unicodedata import normalize
-from collections import defaultdict
+"""
 
+"""
+
+import os
+from datetime import datetime
+import pandas as pd
 from .base_processor import BaseProcessor
-from ..utils.utils import save_data_from_prep, load_data_from_prep
+from ..utils.utils import is_package_installed
+
 
 # Steps
 # 'machine-learning method; lstm, deep learning'
@@ -20,7 +20,7 @@ from ..utils.utils import save_data_from_prep, load_data_from_prep
 
 
 class TextProcessor(BaseProcessor):
-    FIRST_PIPELINE = {
+    DEFAULT_PRIMARY_PIPELINE = {
         'default': [
             {"description": "Removing Angle Bracket Pattern...", "function": "remove_angle_brackets",
              "args": {}},
@@ -46,7 +46,7 @@ class TextProcessor(BaseProcessor):
         ]
     }
 
-    SECOND_PIPELINE = {
+    DEFAULT_STEMMING_PIPELINE = {
         'original_data': [
             {"description": "Rejoining Original Terms...", "function": "rejoin_terms", "args": {}},
             {"description": "Filtering by Length...", "function": "filter_by_length", "args": {}},
@@ -67,7 +67,11 @@ class TextProcessor(BaseProcessor):
                  deduplication_threshold: float = 1.0,
                  new_col_name = 'text_col',
                  word_len_threshold: int = 2,
-                 fill_na: str = None):
+                 primary_pipeline: list[dict] = None,
+                 stemming_pipeline: list[dict] = None,
+                 cache_location: str = None,
+                 fill_na: str = None,
+                 cache_format: str = 'csv'):
         super().__init__(dataframe = dataframe,
                          columns_to_process = columns_to_process,
                          date_column = date_column,
@@ -77,30 +81,105 @@ class TextProcessor(BaseProcessor):
         self.handle_nan(mode_type = 'processing')
         self.new_col_name = new_col_name
 
-    def execute_processor(self) -> pd.DataFrame:
+        self.PRIMARY_PIPELINE = primary_pipeline or self.DEFAULT_PRIMARY_PIPELINE
+        self.STEMMING_PIPELINE = stemming_pipeline or self.DEFAULT_STEMMING_PIPELINE
+
+        self.primary_pipeline_data = None  # to store the processed data from the primary pipeline
+        self.stemming_pipeline_data = None  # to store the processed data from the stemming pipeline
+
+        self.cache_location = cache_location
+
+        self.cache_format = cache_format.lower()
+
+    # def execute_processor(self) -> pd.DataFrame:
+    #     """
+    #     Main method to execute the entire processing.
+    #
+    #     :return: Processed DataFrame.
+    #     """
+    #
+    #     new_col_name = self.new_col_name
+    #     self.combine_columns(self.columns_to_process, new_col_name = new_col_name)
+    #     # Get the column data
+    #     if new_col_name in self.dataframe.columns:
+    #         # Process the first pipeline
+    #         for _, pipeline in self.FIRST_PIPELINE.items():
+    #             self.dataframe[new_col_name] = self._process_pipeline(self.dataframe,
+    #                                                                   new_col_name, pipeline)
+    #
+    #         # After the first pipeline, create the new columns 'original_data' and 'stemmed_data'
+    #         self.dataframe['original_data'] = self.dataframe[new_col_name].copy()
+    #         self.dataframe['stemmed_data'] = self.dataframe[new_col_name].copy()
+    #
+    #         # Process the second pipeline
+    #         for column, pipeline in self.SECOND_PIPELINE.items():
+    #             self.dataframe[column] = self._process_pipeline(self.dataframe, column, pipeline)
+    #
+    #         # Drop the columns that are not needed
+    #         cols_to_keep = self.columns_to_process + ['original_data', 'stemmed_data']
+    #         cols_to_drop = set(self.dataframe.columns) - set(cols_to_keep)
+    #         self.dataframe.drop(columns = cols_to_drop, inplace = True)
+    #     return self.dataframe
+
+    def execute_processor(self,
+                          run_primary = True, run_stemming = True) -> pd.DataFrame:
 
         new_col_name = self.new_col_name
         self.combine_columns(self.columns_to_process, new_col_name = new_col_name)
-        # Get the column data
+
+        if self.cache_location:
+            # Check for cached primary data
+            if run_primary:
+                cached_data = self.load_cached_data('primary')
+                if cached_data is not None:
+                    self.dataframe = cached_data
+                    run_primary = False  # Skip primary pipeline if cached data is loaded
+
+            # Check for cached stemming data
+            if run_stemming:
+                cached_data = self.load_cached_data('stemming')
+                if cached_data is not None:
+                    self.dataframe = cached_data
+                    run_stemming = False
+
+        if run_primary:
+            self.execute_primary_pipeline()
+            if self.cache_location:
+                self.save_cached_data('primary')
+
+        if run_stemming:
+            self.execute_stemming_pipeline()
+            if self.cache_location:
+                self.save_cached_data('stemming')
+
+        return self.dataframe
+
+    def execute_primary_pipeline(self):
+        """Execute the primary processing pipeline."""
+        new_col_name = self.new_col_name
         if new_col_name in self.dataframe.columns:
-            # The first pipeline
-            for _, pipeline in self.FIRST_PIPELINE.items():
+            for _, pipeline in self.PRIMARY_PIPELINE.items():
                 self.dataframe[new_col_name] = self._process_pipeline(self.dataframe,
                                                                       new_col_name, pipeline)
 
-            # After the first pipeline, create the new columns 'original_data' and 'stemmed_data'
-            self.dataframe['original_data'] = self.dataframe[new_col_name].copy()
-            self.dataframe['stemmed_data'] = self.dataframe[new_col_name].copy()
+        self.primary_pipeline_data = self.dataframe.copy()
 
-            # Process the second pipeline
-            for column, pipeline in self.SECOND_PIPELINE.items():
-                self.dataframe[column] = self._process_pipeline(self.dataframe, column, pipeline)
+    def execute_stemming_pipeline(self):
+        """Execute the stemming and secondary processing pipeline."""
+        new_col_name = self.new_col_name
+        # Prepare for the next pipeline
+        self.dataframe['original_data'] = self.dataframe[new_col_name].copy()
+        self.dataframe['stemmed_data'] = self.dataframe[new_col_name].copy()
 
-            # Drop the columns that are not needed
-            cols_to_keep = self.columns_to_process + ['original_data', 'stemmed_data']
-            cols_to_drop = set(self.dataframe.columns) - set(cols_to_keep)
-            self.dataframe.drop(columns = cols_to_drop, inplace = True)
-        return self.dataframe
+        for column, pipeline in self.STEMMING_PIPELINE.items():
+            self.dataframe[column] = self._process_pipeline(self.dataframe, column, pipeline)
+
+        # Drop the columns that are not needed
+        cols_to_keep = self.columns_to_process + ['original_data', 'stemmed_data']
+        cols_to_drop = set(self.dataframe.columns) - set(cols_to_keep)
+        self.dataframe.drop(columns = cols_to_drop, inplace = True)
+
+        self.stemming_pipeline_data = self.dataframe.copy()
 
     # ==================================
     # Helper Method
@@ -109,10 +188,10 @@ class TextProcessor(BaseProcessor):
         """
         Process a column in the DataFrame based on the provided pipeline.
 
-        :param df:
-        :param column_name:
-        :param pipeline:
-        :return:
+        :param df: DataFrame to process.
+        :param column_name: Column to process.
+        :param pipeline: Pipeline from the class attribute.
+        :return: Processed DataFrame Column.
         """
         for step in pipeline:
             description = step["description"]
@@ -120,3 +199,60 @@ class TextProcessor(BaseProcessor):
             args = step["args"]
             df[column_name] = self.apply_with_progress(df[column_name], function, description, **args)
         return df[column_name]
+
+    def save_cached_data(self, pipeline_type: str) -> None:
+        """Save the current DataFrame to the cache."""
+        cache_file_path = self.get_cache_file_path(pipeline_type)
+
+        if self.cache_format == 'csv':
+            self.dataframe.to_csv(cache_file_path, index = False)
+        elif self.cache_format == 'feather':
+            if not is_package_installed('pyarrow'):
+                raise ImportError("To use the 'feather' format, you need to install the 'pyarrow' package. "
+                                  "You can install it using pip: pip install pyarrow")
+            self.dataframe.to_feather(cache_file_path)
+        else:
+            raise ValueError(f"Unsupported cache format: {self.cache_format}")
+
+    def load_cached_data(self, pipeline_type: str) -> pd.DataFrame | None:
+        """Load the DataFrame from the cache if it exists."""
+        # List all cache files for the specific pipeline
+        cache_files = [f for f in os.listdir(self.cache_location) if f.startswith(f"data_{pipeline_type}_")]
+
+        # If no cache files, return None
+        if not cache_files:
+            return None
+
+        # Sort cache files by timestamp and pick the latest
+        latest_cache_file = sorted(cache_files)[-1]
+        cache_file_path = os.path.join(self.cache_location, latest_cache_file)
+
+        if self.cache_format == "csv":
+            return pd.read_csv(cache_file_path)
+        elif self.cache_format == "feather":
+            return pd.read_feather(cache_file_path)
+        return None
+
+    def get_cache_file_path(self, pipeline_type: str) -> str:
+        """Get the cache file path based on the current DataFrame's content."""
+        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        file_extension = self.cache_format
+        return os.path.join(self.cache_location, f"cache_{pipeline_type}_{timestamp}.{file_extension}")
+
+    def get_primary_pipeline_data(self, use_cache: bool = False) -> pd.DataFrame:
+        """Return the processed data from the primary pipeline."""
+        if self.primary_pipeline_data is not None:
+            return self.primary_pipeline_data.copy()
+        else:
+            raise ValueError(
+                "Primary pipeline data not available. "
+                "Ensure the primary pipeline has been executed or valid cache is available.")
+
+    def get_stemming_pipeline_data(self, use_cache: bool = False) -> pd.DataFrame:
+        """Return the processed data from the stemming pipeline."""
+        if self.stemming_pipeline_data is not None:
+            return self.stemming_pipeline_data.copy()
+        else:
+            raise ValueError(
+                "Stemming pipeline data not available. "
+                "Ensure the stemming pipeline has been executed or valid cache is available.")

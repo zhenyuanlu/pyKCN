@@ -1,4 +1,6 @@
-import string
+"""
+
+"""
 import pandas as pd
 from rapidfuzz import fuzz
 
@@ -22,6 +24,7 @@ class DeduplicationProcessor(BaseProcessor):
                  dataframe: pd.DataFrame,
                  columns_to_deduplicate: list[str] = None,
                  deduplication_threshold: float = 1.0,
+                 deduplication_steps: list[dict] = None,
                  new_col_name = 'temp_col',
                  fill_na: str = None):
         super().__init__(dataframe = dataframe,
@@ -29,7 +32,7 @@ class DeduplicationProcessor(BaseProcessor):
                          deduplication_threshold = deduplication_threshold,
                          fill_na = fill_na)
         self.handle_nan(mode_type = 'deduplication')
-        self.pipeline = self.DEDUPLICATION_STEPS
+        self.pipeline = deduplication_steps or self.DEDUPLICATION_STEPS
         self.new_col_name = new_col_name
 
     @staticmethod
