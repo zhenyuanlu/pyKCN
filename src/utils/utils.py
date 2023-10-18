@@ -125,9 +125,12 @@ def load_data_from_prep(pipeline_name: str = None,
         return None
 
 
-def is_package_installed(pkg_name: str) -> bool:
+def is_package_installed(pkg_name: str, error_msg: str = None) -> bool:
     try:
         importlib.import_module(pkg_name)
         return True
     except ImportError:
+        if error_msg:
+            raise ImportError(error_msg)
         return False
+

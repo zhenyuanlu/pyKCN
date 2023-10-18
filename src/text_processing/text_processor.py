@@ -207,35 +207,48 @@ class TextProcessor(BaseProcessor):
         if self.cache_format == 'csv':
             self.dataframe.to_csv(cache_file_path, index = False)
         elif self.cache_format == 'feather':
-            if not is_package_installed('pyarrow'):
-                raise ImportError("To use the 'feather' format, you need to install the 'pyarrow' package. "
-                                  "You can install it using pip: pip install pyarrow")
+            self._handle_feather_format()
             self.dataframe.to_feather(cache_file_path)
         else:
             raise ValueError(f"Unsupported cache format: {self.cache_format}")
 
     def load_cached_data(self, pipeline_type: str) -> pd.DataFrame | None:
-        """Load the DataFrame from the cache if it exists."""
+        """
+        Load the DataFrame from the cache if it exists.
+
+        :param pipeline_type:
+        :return:
+        """
+        file_extension = 'feather' if self.cache_format == 'feather' else 'csv'
         # List all cache files for the specific pipeline
-        cache_files = [f for f in os.listdir(self.cache_location) if f.startswith(f"data_{pipeline_type}_")]
+        cache_files = [f for f in os.listdir(self.cache_location)
+                       if f.startswith(f"cache_{pipeline_type}_") and f.endswith(f".{file_extension}")]
 
         # If no cache files, return None
         if not cache_files:
             return None
 
         # Sort cache files by timestamp and pick the latest
-        latest_cache_file = sorted(cache_files)[-1]
+        latest_cache_file = sorted(cache_files, key=self.extract_timestamp)[-1]
         cache_file_path = os.path.join(self.cache_location, latest_cache_file)
 
         if self.cache_format == "csv":
             return pd.read_csv(cache_file_path)
         elif self.cache_format == "feather":
+            self._handle_feather_format()
             return pd.read_feather(cache_file_path)
         return None
 
+    # TODO - Move this to utils
+    @staticmethod
+    def extract_timestamp(filename: str) -> datetime:
+        # Strip file extension and extract the timestamp
+        timestamp_str = "_".join(filename.split("_")[-2:]).split('.')[0]
+        return datetime.strptime(timestamp_str, '%Y%m%d_%H%M%S')
+
     def get_cache_file_path(self, pipeline_type: str) -> str:
         """Get the cache file path based on the current DataFrame's content."""
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         file_extension = self.cache_format
         return os.path.join(self.cache_location, f"cache_{pipeline_type}_{timestamp}.{file_extension}")
 
@@ -256,3 +269,17 @@ class TextProcessor(BaseProcessor):
             raise ValueError(
                 "Stemming pipeline data not available. "
                 "Ensure the stemming pipeline has been executed or valid cache is available.")
+
+    @staticmethod
+    def _handle_feather_format() -> pd.DataFrame | None:
+        """
+        Handle operations for the 'feather' cache format.
+
+        :param operation: Either 'save' or 'load'
+        :param cache_file_path: Path to the cache file
+        :return: Loaded DataFrame if operation is 'load', otherwise None
+        """
+        custom_error_msg = ("To use the 'feather' format, you need to install the 'pyarrow' package. "
+                            "You can install it using pip or conda.")
+        if not is_package_installed('pyarrow', custom_error_msg):
+            return

@@ -202,6 +202,12 @@ class BaseProcessor:
         return self._text_input_handler(tokens, self._handle_hyphens_in_single_token)
 
     def filter_by_length(self, tokens: list[str]) -> list[str]:
+        """
+        Filter the tokens by length based on the word_len_threshold.
+
+        :param tokens: List of tokens to process.
+        :return: List of tokens filtered by length.
+        """
         return self._text_input_handler(tokens, self._filter_by_length_single_token)
 
     # pattern_numbers_with_spaces/pattern_standalone_numbers/pattern_embedded_numbers
