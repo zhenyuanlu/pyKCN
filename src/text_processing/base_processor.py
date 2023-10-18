@@ -20,7 +20,6 @@ Examples:
 
 """
 
-
 import re
 import string
 import pandas as pd
@@ -72,7 +71,7 @@ class BaseProcessor:
 
         self.custom_punctuation_pattern = re.compile(r'[%s]' % re.escape(custom_punctuation))
         self.default_punctuation_pattern = re.compile(r'[%s]' % re.escape(default_punctuation))
-        self.non_ascii_pattern  = re.compile(r'[^\x00-\x7F]+')
+        self.non_ascii_pattern = re.compile(r'[^\x00-\x7F]+')
         self.angle_brackets_pattern = re.compile(r'<[^>]+>.*?</[^>]+>')
 
         # Targets numbers that are standalone or sandwiched between spaces.
@@ -290,9 +289,9 @@ class BaseProcessor:
         else:
             raise ValueError("Invalid data type. `apply_with_progress` expects a pandas Series or DataFrame.")
 
-# ==================================
-# Text input handler
-# ==================================
+    # ==================================
+    # Text input handler
+    # ==================================
 
     def _text_input_handler(self, input_data, processing_function, *args, **kwargs):
         # Apply transformations
@@ -311,7 +310,7 @@ class BaseProcessor:
             processed_data = processing_function(input_data, *args, **kwargs)
             return processed_data if processed_data else ''
         elif isinstance(input_data, list) and all(isinstance(item, str) for item in input_data):
-            processed_data  = [processing_function(item, *args, **kwargs) for item in input_data]
+            processed_data = [processing_function(item, *args, **kwargs) for item in input_data]
             return [item for item in processed_data if item]
         elif isinstance(input_data, list) and all(isinstance(sublist, list) for sublist in input_data):
             processed_data = [self._apply_transformation(sublist, processing_function, *args, **kwargs)
@@ -355,10 +354,9 @@ class BaseProcessor:
             flattened.append(new_sublist)
         return flattened
 
-
-# ==================================
-# Helper Methods
-# ==================================
+    # ==================================
+    # Helper Methods
+    # ==================================
     # Helper methods
     def _split_single_string(self, text: str) -> list[str]:
         return re.split(self.custom_delimiter, text)

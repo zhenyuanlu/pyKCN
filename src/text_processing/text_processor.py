@@ -1,4 +1,7 @@
 """
+TextProcessor
+=============
+
 
 """
 
@@ -88,41 +91,9 @@ class TextProcessor(BaseProcessor):
         self.stemming_pipeline_data = None  # to store the processed data from the stemming pipeline
 
         self.cache_location = cache_location
-
         self.cache_format = cache_format.lower()
 
-    # def execute_processor(self) -> pd.DataFrame:
-    #     """
-    #     Main method to execute the entire processing.
-    #
-    #     :return: Processed DataFrame.
-    #     """
-    #
-    #     new_col_name = self.new_col_name
-    #     self.combine_columns(self.columns_to_process, new_col_name = new_col_name)
-    #     # Get the column data
-    #     if new_col_name in self.dataframe.columns:
-    #         # Process the first pipeline
-    #         for _, pipeline in self.FIRST_PIPELINE.items():
-    #             self.dataframe[new_col_name] = self._process_pipeline(self.dataframe,
-    #                                                                   new_col_name, pipeline)
-    #
-    #         # After the first pipeline, create the new columns 'original_data' and 'stemmed_data'
-    #         self.dataframe['original_data'] = self.dataframe[new_col_name].copy()
-    #         self.dataframe['stemmed_data'] = self.dataframe[new_col_name].copy()
-    #
-    #         # Process the second pipeline
-    #         for column, pipeline in self.SECOND_PIPELINE.items():
-    #             self.dataframe[column] = self._process_pipeline(self.dataframe, column, pipeline)
-    #
-    #         # Drop the columns that are not needed
-    #         cols_to_keep = self.columns_to_process + ['original_data', 'stemmed_data']
-    #         cols_to_drop = set(self.dataframe.columns) - set(cols_to_keep)
-    #         self.dataframe.drop(columns = cols_to_drop, inplace = True)
-    #     return self.dataframe
-
-    def execute_processor(self,
-                          run_primary = True, run_stemming = True) -> pd.DataFrame:
+    def execute_processor(self, run_primary = True, run_stemming = True) -> pd.DataFrame:
 
         new_col_name = self.new_col_name
         self.combine_columns(self.columns_to_process, new_col_name = new_col_name)
@@ -206,9 +177,9 @@ class TextProcessor(BaseProcessor):
 
         if self.cache_format == 'csv':
             self.dataframe.to_csv(cache_file_path, index = False)
-        elif self.cache_format == 'feather':
-            self._handle_feather_format()
-            self.dataframe.to_feather(cache_file_path)
+        elif self.cache_format == 'parquet':
+            self._handle_parquet_format()
+            self.dataframe.to_parquet(cache_file_path)
         else:
             raise ValueError(f"Unsupported cache format: {self.cache_format}")
 
@@ -219,7 +190,7 @@ class TextProcessor(BaseProcessor):
         :param pipeline_type:
         :return:
         """
-        file_extension = 'feather' if self.cache_format == 'feather' else 'csv'
+        file_extension = 'parquet' if self.cache_format == 'parquet' else 'csv'
         # List all cache files for the specific pipeline
         cache_files = [f for f in os.listdir(self.cache_location)
                        if f.startswith(f"cache_{pipeline_type}_") and f.endswith(f".{file_extension}")]
@@ -229,17 +200,17 @@ class TextProcessor(BaseProcessor):
             return None
 
         # Sort cache files by timestamp and pick the latest
-        latest_cache_file = sorted(cache_files, key=self.extract_timestamp)[-1]
+        latest_cache_file = sorted(cache_files, key = self.extract_timestamp)[-1]
         cache_file_path = os.path.join(self.cache_location, latest_cache_file)
 
         if self.cache_format == "csv":
             return pd.read_csv(cache_file_path)
-        elif self.cache_format == "feather":
-            self._handle_feather_format()
-            return pd.read_feather(cache_file_path)
+        elif self.cache_format == "parquet":
+            self._handle_parquet_format()
+            return pd.read_parquet(cache_file_path)
         return None
 
-    # TODO - Move this to utils
+    # TODO - Move extract_timestamp to utils
     @staticmethod
     def extract_timestamp(filename: str) -> datetime:
         # Strip file extension and extract the timestamp
@@ -271,15 +242,13 @@ class TextProcessor(BaseProcessor):
                 "Ensure the stemming pipeline has been executed or valid cache is available.")
 
     @staticmethod
-    def _handle_feather_format() -> pd.DataFrame | None:
+    def _handle_parquet_format() -> pd.DataFrame | None:
         """
-        Handle operations for the 'feather' cache format.
+        Handle operations for the 'parquet' cache format.
 
-        :param operation: Either 'save' or 'load'
-        :param cache_file_path: Path to the cache file
-        :return: Loaded DataFrame if operation is 'load', otherwise None
+        :return: None
         """
-        custom_error_msg = ("To use the 'feather' format, you need to install the 'pyarrow' package. "
+        custom_error_msg = ("To use the 'parquet' format, you need to install the 'pyarrow' package. "
                             "You can install it using pip or conda.")
         if not is_package_installed('pyarrow', custom_error_msg):
             return
