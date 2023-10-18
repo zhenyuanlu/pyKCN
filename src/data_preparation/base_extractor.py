@@ -13,23 +13,26 @@ Classes:
 - ExternalFileExtractor: Subclass for extracting data from external files like CSV and Excel (defined in another module).
 - InMemoryDataFrameExtractor: Subclass for extracting data from in-memory DataFrames (defined in another module).
 
-Example:
+Usage:
 --------
-# Define the directory and mapping for data extraction
-data_dir = "/path/to/data/files"
-data_mapping = {
-    'source1': {'corpus_columns': ['Title', 'Keywords'], 'date_column': 'Published Date'},
-    'source2': {'corpus_columns': ['Document Title', 'Tags'], 'date_column': 'Publication Year'}
-}
+*Example 1: Define the directory and mapping for data extraction*::
 
-# Initialize and use ExternalFileExtractor
-external_file_extractor = ExternalFileExtractor(data_mapping=data_mapping, data_dir=data_dir, date_type='year')
-external_data = external_file_extractor.extract_data()
+    data_dir = "/path/to/data/files"
+    data_mapping = {
+        'source1': {'corpus_columns': ['Title', 'Keywords'], 'date_column': 'Published Date'},
+        'source2': {'corpus_columns': ['Document Title', 'Tags'], 'date_column': 'Publication Year'}
+    }
 
-# Initialize and use InMemoryDataFrameExtractor
-# (assuming df is a pandas DataFrame object)
-in_memory_data_extractor = InMemoryDataFrameExtractor(df, ['Title', 'Keywords'], 'Published Date')
-in_memory_data = in_memory_data_extractor.extract_data()
+*Example 2: Initialize and use ExternalFileExtractor*::
+
+    external_file_extractor = ExternalFileExtractor(data_mapping=data_mapping, data_dir=data_dir, date_type='year')
+    external_data = external_file_extractor.extract_data()
+
+*Example 3: Initialize and use InMemoryDataFrameExtractor*::
+
+    # assuming df is a pandas DataFrame object
+    in_memory_data_extractor = InMemoryDataFrameExtractor(df, ['Title', 'Keywords'], 'Published Date')
+    in_memory_data = in_memory_data_extractor.extract_data()
 """
 
 import re

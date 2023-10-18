@@ -2,42 +2,121 @@
 TextProcessor
 =============
 
+The TextProcessor module provides a series of preprocessing and normalization steps
+to transform and clean textual data. It is built on top of the `BaseProcessor` and
+provides a streamlined procedure to handle textual data in various formats.
+
 Description:
 ------------
 
+The TextProcessor has two main processing pipelines: `DEFAULT_PRIMARY_PIPELINE` and
+`DEFAULT_STEMMING_PIPELINE`. Each pipeline consists of multiple steps that are applied
+in sequence to the input data.
 
-Example:
+The `DEFAULT_PRIMARY_PIPELINE` transforms raw text data into a tokenized and normalized
+form, while the `DEFAULT_STEMMING_PIPELINE` provides additional stemming and rejoining
+operations on the processed data from the primary pipeline.
+
+Procedure:
+----------
+
+**PRIMARY PIPELINE**:
+
+- Remove Angle Bracket Patterns
+- Split Text by Delimiters
+- Convert Text to Lowercase
+- Apply Unicode Normalization
+- Tokenize Text
+- Remove Non-ASCII Characters
+- Split Terms Containing Hyphens
+- Remove Stopwords
+- Strip Leading and Trailing Whitespaces
+- Remove Numbers (all types by default)
+- Remove Punctuation (default set)
+
+*Example Transformation*::
+
+    # Original text
+    'Machine-learning method; lstm; deep learning; <sub>27</sub>'
+    # Remove angle bracket patterns
+    -> 'Machine-learning method; lstm; deep learning'
+    # Split by delimiters
+    -> ['Machine-learning method', 'lstm', 'deep learning']
+    # Convert to lowercase
+    -> ['machine-learning method', 'lstm', 'deep learning']
+    # Tokenize text
+    -> [['machine-learning', 'method'], ['lstm'], ['deep learning']]
+    # Split terms containing hyphens
+    -> [['machine', 'learning', 'method'], ['lstm'], ['deep', 'learning']]
+    (Rest of the steps will be processing in the stemming pipeline)
+
+**STEMMING PIPELINE**::
+
+The stemming pipeline has two paths:
+
+`original_data`: This processes the original words (without stemming) and performs:
+    - Rejoining Original Terms
+    - Filtering by Length
+    - Cleaning Original Terms
+`stemmed_data`: This processes the stemmed version of the words and performs:
+    - Stemming
+    - Rejoining Stemmed Terms
+    - Filtering by Length
+    - Cleaning Stemmed Terms
+
+*Example Transformation*:
+
+Original Data Pipeline::
+
+    (Previous processing steps from primary pipeline)
+    [['machine', 'learning', 'method'], ['lstm'], ['deep', 'learning']]
+    # Rejoining original terms
+    -> ['machine learning method', 'lstm', 'deep learning']
+
+Stemmed Data Pipeline::
+
+    (Previous processing steps from primary pipeline)
+    [['machine', 'learning', 'method'], ['lstm'], ['deep', 'learning']]
+    # Stemming pipeline
+    -> [['machin', 'learn', 'method'], ['lstm'], ['deep', 'learn']]
+    # Rejoining stemmed terms
+    -> ['machin learn method', 'lstm', 'deep learn']
+
+
+Usage:
 --------
-Example 1: Basic Usage
+**Example 1: Basic Usage**::
+
+    text_processor = TextProcessor(dataframe,
+                                    columns_to_process = ['column_1', 'column_2'],
+                                    cache_location = 'CACHE_LOCATION', cache_format = 'csv')
+    processed_df = text_processor.execute_processor()
 
 
-text_processor = TextProcessor(dataframe,
-                                columns_to_process = ['column_1', 'column_2'],
-                                cache_location = 'CACHE_LOCATION', cache_format = 'csv')
-processed_df = text_processor.execute_processor()
 
+**Example 2: Load Deduplicated Pipeline Data and Save Processed Data**::
 
-Example 2: Load Deduplicated Pipeline Data and Save Processed Data
+    from src.utils.utils import load_data_from_prep, save_data_from_prep
 
-from src.utils.utils import load_data_from_prep, save_data_from_prep
-PARENT_PATH = r'path\to\parent\folder'
-CACHE_LOCATION = r'path\to\cache\folder'
-DATA_TYPE = 'deduplicated'
-PIPELINE_NAME = 'PIPELINE_NAME'
+    PARENT_PATH = r'path/to/parent/folder'
+    CACHE_LOCATION = r'path/to/cache/folder'
+    DATA_TYPE = 'deduplicated'
+    PIPELINE_NAME = 'PIPELINE_NAME'
 
-dataframe = load_data_from_prep(pipeline_name = PIPELINE_NAME,
-                                 data_type = DATA_TYPE,
-                                 root_path = PARENT_PATH,
-                                 filename = None)
+    dataframe = load_data_from_prep(pipeline_name = PIPELINE_NAME,
+                                     data_type = DATA_TYPE,
+                                     root_path = PARENT_PATH,
+                                     filename = None)
 
-text_processor = TextProcessor(dataframe,
-                                columns_to_process = ['column_1', 'column_2'],
-                                cache_location = 'CACHE_LOCATION', cache_format = 'csv')
-processed_df = text_processor.execute_processor()
+    text_processor = TextProcessor(dataframe,
+                                    columns_to_process = ['column_1', 'column_2'],
+                                    cache_location = 'CACHE_LOCATION',
+                                    cache_format = 'csv')
+    processed_df = text_processor.execute_processor()
 
-save_data_from_prep(df, pipeline_name = PIPELINE_NAME,
-                    data_type = 'processed',
-                    root_path = PARENT_PATH)
+    save_data_from_prep(processed_df, pipeline_name = PIPELINE_NAME,
+                        data_type = 'processed',
+                        root_path = PARENT_PATH)
 
 """
 
@@ -46,16 +125,6 @@ from datetime import datetime
 import pandas as pd
 from .base_processor import BaseProcessor
 from ..utils.utils import is_package_installed
-
-
-# Steps
-# 'machine-learning method; lstm, deep learning'
-# ['machine-learning method', 'lstm', 'deep learning']
-# [['machine-learning', 'method'], [lstm], ['deep', ' learning']]
-# [['machine', 'learning', 'method'], ['lstm'], ['deep', 'learning']]
-
-# then save this original words to the vocabulary , and another copy for stemming
-# rejoin each term back to single string for both original and stemmed
 
 
 class TextProcessor(BaseProcessor):
@@ -130,7 +199,13 @@ class TextProcessor(BaseProcessor):
         self.cache_format = cache_format.lower()
 
     def execute_processor(self, run_primary = True, run_stemming = True) -> pd.DataFrame:
+        """
+        Execute the text processing pipeline.
 
+        :param run_primary: If run the primary pipeline.
+        :param run_stemming: If run the stemming pipeline.
+        :return: Processed DataFrame.
+        """
         new_col_name = self.new_col_name
         self.combine_columns(self.columns_to_process, new_col_name = new_col_name)
 
@@ -162,7 +237,11 @@ class TextProcessor(BaseProcessor):
         return self.dataframe
 
     def execute_primary_pipeline(self):
-        """Execute the primary processing pipeline."""
+        """
+        Execute the primary processing pipeline.
+
+        :return: None
+        """
         new_col_name = self.new_col_name
         if new_col_name in self.dataframe.columns:
             for _, pipeline in self.PRIMARY_PIPELINE.items():
@@ -172,7 +251,11 @@ class TextProcessor(BaseProcessor):
         self.primary_pipeline_data = self.dataframe.copy()
 
     def execute_stemming_pipeline(self):
-        """Execute the stemming and secondary processing pipeline."""
+        """
+        Execute the stemming and secondary processing pipeline.
+
+        :return: None
+        """
         new_col_name = self.new_col_name
         # Prepare for the next pipeline
         self.dataframe['original_data'] = self.dataframe[new_col_name].copy()
@@ -208,7 +291,12 @@ class TextProcessor(BaseProcessor):
         return df[column_name]
 
     def save_cached_data(self, pipeline_type: str) -> None:
-        """Save the current DataFrame to the cache."""
+        """
+        Save the current DataFrame to the cache.
+
+        :param pipeline_type: Type of pipeline to save.
+        :return: None
+        """
         cache_file_path = self.get_cache_file_path(pipeline_type)
 
         if self.cache_format == 'csv':
@@ -223,8 +311,8 @@ class TextProcessor(BaseProcessor):
         """
         Load the DataFrame from the cache if it exists.
 
-        :param pipeline_type:
-        :return:
+        :param pipeline_type: Type of pipeline to load.
+        :return: DataFrame from the cache.
         """
         file_extension = 'parquet' if self.cache_format == 'parquet' else 'csv'
         # List all cache files for the specific pipeline
@@ -249,18 +337,33 @@ class TextProcessor(BaseProcessor):
     # TODO - Move extract_timestamp to utils
     @staticmethod
     def extract_timestamp(filename: str) -> datetime:
+        """
+        Extract the timestamp from the cache file name.
+
+        :param filename: Cache file name.
+        :return: Timestamp from the cache file name.
+        """
         # Strip file extension and extract the timestamp
         timestamp_str = "_".join(filename.split("_")[-2:]).split('.')[0]
         return datetime.strptime(timestamp_str, '%Y%m%d_%H%M%S')
 
     def get_cache_file_path(self, pipeline_type: str) -> str:
-        """Get the cache file path based on the current DataFrame's content."""
+        """
+        Get the cache file path based on the current DataFrame's content.
+
+        :param pipeline_type: Type of pipeline to save.
+        :return: Cache file path.
+        """
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         file_extension = self.cache_format
         return os.path.join(self.cache_location, f"cache_{pipeline_type}_{timestamp}.{file_extension}")
 
-    def get_primary_pipeline_data(self, use_cache: bool = False) -> pd.DataFrame:
-        """Return the processed data from the primary pipeline."""
+    def get_primary_pipeline_data(self) -> pd.DataFrame:
+        """
+        Return the processed data from the primary pipeline.
+
+        :return: Processed data from the primary pipeline.
+        """
         if self.primary_pipeline_data is not None:
             return self.primary_pipeline_data.copy()
         else:
@@ -268,8 +371,13 @@ class TextProcessor(BaseProcessor):
                 "Primary pipeline data not available. "
                 "Ensure the primary pipeline has been executed or valid cache is available.")
 
-    def get_stemming_pipeline_data(self, use_cache: bool = False) -> pd.DataFrame:
-        """Return the processed data from the stemming pipeline."""
+    def get_stemming_pipeline_data(self) -> pd.DataFrame:
+        """
+        Return the processed data from the stemming pipeline.
+
+        :return: Processed data from the stemming pipeline.
+        :raises ValueError: If the stemming pipeline data is not available.
+        """
         if self.stemming_pipeline_data is not None:
             return self.stemming_pipeline_data.copy()
         else:

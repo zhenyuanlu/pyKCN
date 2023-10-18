@@ -1,6 +1,87 @@
 """
 DeduplicationProcessor
 ======================
+The `DeduplicationProcessor` module offers a systematic approach to reduce duplicates in textual data.
+Building upon the foundation of the `BaseProcessor`, this class defines a specific sequence of steps
+tailored for data deduplication.
+
+Description:
+------------
+The `DeduplicationProcessor` is designed to preprocess textual data with the primary goal of making
+it suitable for deduplication. By applying a series of normalization and transformation steps, this processor
+ensures that minor variations in the textual data (like casing, punctuation, or encoding differences) do not
+lead to unnecessary duplicates. The processed data can then be compared for deduplication using string similarity
+or other deduplication techniques.
+
+Procedure:
+------
+**DEDUPLICATION PIPELINE**:
+
+- Remove Angle Bracket Patterns
+- Convert Text to Lowercase
+- Apply Unicode Normalization
+- Remove Non-ASCII Characters
+- Remove Punctuation (default set)
+- Remove Numbers (all types by default)
+
+After processing through these steps, textual data is standardized to a format where direct string comparisons
+become more reliable, thereby aiding in deduplication efforts.
+
+Note:
+Tokenization might not be essential for the deduplication purpose in this specific context.
+
+*Example Transformation*::
+
+    # Original text
+    'Machine-learning method; lstm; déép learning ; <sub>27</sub>'
+    # Remove angle bracket patterns
+    -> 'Machine-learning method; lstm; déép learning'
+    # Convert Text to Lowercase
+    -> 'machine-learning method; lstm; déép learning'
+    # Apply Unicode Normalization, e.g. é, french accents to english, unicode '\u00e9'
+    -> 'machine-learning method; lstm; deep learning'
+    # Remove Non-ASCII Characters, e.g. symbols, emojis, etc.
+    -> 'machine-learning method; lstm; deep learning'
+    # Remove Punctuation
+    -> 'machine learning method lstm deep learning'
+    # Remove Numbers
+    -> 'machine learning method lstm deep learning'
+
+
+Usage:
+--------
+**Example 1: Basic Usage**::
+
+    deduplication_processor = DeduplicationProcessor(dataframe,
+                                    columns_to_process = ['column_1', 'column_2'])
+    processed_df = deduplication_processor.execute_processor()
+
+
+
+**Example 2: Load Data Extraction Pipeline Data and Save Deduplicated Data**::
+
+    from src.utils.utils import load_data_from_prep, save_data_from_prep
+
+    PARENT_PATH = r'path/to/parent/folder'
+    CACHE_LOCATION = r'path/to/cache/folder'
+    DATA_TYPE = 'extracted'
+    PIPELINE_NAME = 'PIPELINE_NAME'
+
+    dataframe = load_data_from_prep(pipeline_name = PIPELINE_NAME,
+                                     data_type = DATA_TYPE,
+                                     root_path = PARENT_PATH,
+                                     filename = None)
+
+    deduplication_processor = DeduplicationProcessor(dataframe,
+                                    columns_to_process = ['column_1', 'column_2'],
+                                    cache_location = 'CACHE_LOCATION',
+                                    cache_format = 'csv')
+    processed_df = deduplication_processor.execute_processor()
+
+    save_data_from_prep(processed_df, pipeline_name = PIPELINE_NAME,
+                        data_type = 'deduplicated',
+                        root_path = PARENT_PATH)
+
 
 """
 import pandas as pd
