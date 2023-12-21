@@ -43,7 +43,7 @@ Sachini Weerasekara, Zhenyuan Lu, Burcu Ozek, Jacqueline Isaacs, Sagar Kamarthi
 
 
 
-[ Abstract Here]
+pyKCN, a Python-based tool for analyzing co-occurrence keywords in literature review. pyKCN is a python tool that can be used to analyze the trending of a field through a robust analysis of co-occurrence keywords, association rules and other models. The tool is equipped with a comprehensive extractor module alongside a text processor, a deduplication processor, and several keyword analysis methods including KCN and association rule. The strength of pyKCN extends beyond literature analysis. It has been instrumental in propelling multiple studies across diverse domains, such as nano EHS, industry 4.0, pain research, etc. Furthermore, pyKCN's architecture enhance it with the ability to process and analyze large scale dataset, thereby providing a platform for researchers to visualize the important role of keywords within and across academic papers. This, in turn, empowers scholars to discern emerging trends, identify seminal works, and cultivate a nuanced understanding of the thematic and structural contours of scientific discourse. 
 
 
 ## Get Started
@@ -55,6 +55,7 @@ xlrd==2.0.1
 nltk==3.8.1
 rapidfuzz
 pyarrow (optional)
+biopython
 ```
 
 
