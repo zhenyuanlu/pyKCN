@@ -265,11 +265,12 @@ class TextProcessor(BaseProcessor):
             self.dataframe[column] = self._process_pipeline(self.dataframe, column, pipeline)
 
         # Drop the columns that are not needed
-        cols_to_keep = self.columns_to_process + ['original_data', 'stemmed_data']
+        cols_to_keep = self.columns_to_process + ['original_data', 'stemmed_data', 'date_col']
         cols_to_drop = set(self.dataframe.columns) - set(cols_to_keep)
         self.dataframe.drop(columns = cols_to_drop, inplace = True)
 
         self.stemming_pipeline_data = self.dataframe.copy()
+        # logging.debug(f"Columns after primary pipeline: {self.dataframe.columns}")
 
     # ==================================
     # Helper Method

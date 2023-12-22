@@ -3,6 +3,10 @@ DEFAULT_QUERY = "(cancer[TI] OR cancer[OT] OR cancer[AB])"
 DEFAULT_BATCH_SIZE = 10000
 DEFAULT_COLUMNS = ['TI', 'OT', 'AB', 'DP']
 """
+
+# TODO add docstrings
+# TODO add type hints
+
 import os
 import pandas as pd
 from Bio import Entrez, Medline
@@ -86,4 +90,5 @@ class NCBIFetcher:
             df.to_csv(output_file, encoding='utf-8', index=False)
 
     # TODO add timestamp to the filename
+    # TODO make the code more modular
 
