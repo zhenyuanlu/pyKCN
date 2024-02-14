@@ -35,6 +35,9 @@ Srinivasan Radhakrishnan, Serkan Erbis, Jacqueline A. Isaacs, Sagar Kamarthi
 Burcu Ozek, Zhenyuan Lu, Fatemeh Pouromran, Srinivasan Radhakrishnan, Sagar Kamarthi 
 - [Trends in adopting industry 4.0 for asset life cycle management for sustainability: a keyword Co-occurrence network review and analysis](https://www.mdpi.com/2071-1050/14/19/12233)\
 Sachini Weerasekara, Zhenyuan Lu, Burcu Ozek, Jacqueline Isaacs, Sagar Kamarthi
+- [Navigating the Evolution of Digital Twins Research through Keyword Co-Occurence Network Analysis](https://www.mdpi.com/1424-8220/24/4/1202)\
+Wei Li, Haozhou Zhou, Zhenyuan Lu, Sagar Kamarthi
+
 
 <br/>
 
@@ -65,12 +68,6 @@ If you find our study useful, please cite our paper on XXX:
 ```
 reference here
 ```
-
-
-## Contributors
-
-[Zhenyuan Lu](https://github.com/zhenyuanlu), [Wei Li](https://github.com/weili-ie), [Burcu Ozek](https://github.com/burcuozek), [Haozhou Zhou](https://github.com/Haozhou98), [Srinivasan Radhakrishnan](https://github.com/srk-srinivasan)
-
 
 ## Author
 [Zhenyuan Lu](https://zhenyuanlu.com/)\
