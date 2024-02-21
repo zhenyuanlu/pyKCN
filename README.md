@@ -32,14 +32,15 @@ Our team has previously published a series of related papers that laid the groun
 - [Novel keyword co-occurrence network-based methods to foster systematic reviews of scientific literature](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0172778)\
 Srinivasan Radhakrishnan, Serkan Erbis, Jacqueline A. Isaacs, Sagar Kamarthi
 - [Analysis of pain research literature through keyword Co-occurrence networks](https://journals.plos.org/digitalhealth/article?id=10.1371/journal.pdig.0000331)\
-Burcu Ozek, Zhenyuan Lu, Fatemeh Pouromran, Srinivasan Radhakrishnan, Sagar Kamarthi 
+Burcu Ozek, <b>Zhenyuan Lu</b>, Fatemeh Pouromran, Srinivasan Radhakrishnan, Sagar Kamarthi 
 - [Trends in adopting industry 4.0 for asset life cycle management for sustainability: a keyword Co-occurrence network review and analysis](https://www.mdpi.com/2071-1050/14/19/12233)\
-Sachini Weerasekara, Zhenyuan Lu, Burcu Ozek, Jacqueline Isaacs, Sagar Kamarthi
+Sachini Weerasekara, <b>Zhenyuan Lu</b>, Burcu Ozek, Jacqueline Isaacs, Sagar Kamarthi
 - [Navigating the Evolution of Digital Twins Research through Keyword Co-Occurence Network Analysis](https://www.mdpi.com/1424-8220/24/4/1202)\
-Wei Li, Haozhou Zhou, Zhenyuan Lu, Sagar Kamarthi
+Wei Li, Haozhou Zhou, <b>Zhenyuan Lu</b>, Sagar Kamarthi
 
 
 <br/>
+
 
 ## Abstract
 
@@ -61,6 +62,14 @@ pyarrow (optional)
 biopython
 ```
 
+## TODO List
+
+```
+- [ ] NCBI API
+- [ ] Cooccurrence matrix generator
+- [ ] Keyword cooccurrence network (KCN) analysis
+...
+```
 
 ## Reference
 
