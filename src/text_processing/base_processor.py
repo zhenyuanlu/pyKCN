@@ -26,6 +26,7 @@ import pandas as pd
 from tqdm import tqdm
 from unicodedata import normalize, combining
 
+import nltk
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 from nltk.tokenize import word_tokenize
@@ -67,6 +68,9 @@ class BaseProcessor:
         self.word_len_threshold = word_len_threshold
         self.fill_na = fill_na
         self.stemmer = PorterStemmer()
+
+        self.ensure_stopwords_installed(self)
+
         self.stop_words = set(stopwords.words('english'))
 
         self.custom_punctuation_pattern = re.compile(r'[%s]' % re.escape(custom_punctuation))
@@ -87,6 +91,23 @@ class BaseProcessor:
         self.STRING_TO_LIST_METHODS = {}
         # For methods that convert lists to strings, e.g. hyphenated terms.
         self.LIST_TO_STRING_METHODS = {self._handle_hyphens_in_single_token}
+
+    @staticmethod
+    def ensure_stopwords_installed(self):
+        """
+        Ensures that the NLTK stopwords dataset is downloaded and available.
+        It checks if the dataset is present, and if not, it downloads it.
+        """
+        try:
+            # Check if stopwords are available
+            nltk.data.find('corpora/stopwords')
+        except LookupError:
+            # If not available, download stopwords dataset
+            print("NLTK stopwords dataset not found, downloading...")
+            nltk.download('stopwords')
+            print("Download complete.")
+        else:
+            print("NLTK stopwords dataset is already installed.")
 
     def handle_nan(self, mode_type = 'deduplication'):
         """
