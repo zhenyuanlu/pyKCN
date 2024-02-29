@@ -52,14 +52,17 @@ pyKCN, a Python-based tool for analyzing co-occurrence keywords in literature re
 
 ## Get Started
 
+
+### Installation
+This project requires Python 3.8 or newer.
 ```
-python3.11.5
-pandas==2.1.1
-xlrd==2.0.1
+biopython==1.83
 nltk==3.8.1
-rapidfuzz
-pyarrow (optional)
-biopython
+numpy==1.26.4
+pandas==2.1.1
+rapidfuzz==3.6.1
+xlrd==2.0.1
+pyarrow==15.0.0 (optional)
 ```
 
 ## TODO List

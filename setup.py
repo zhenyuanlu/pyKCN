@@ -10,8 +10,13 @@ setup(
     packages=find_packages(),
     install_requires=[
         # List dependencies here:
+        'biopython==1.83',
+        'nltk==3.8.1',
+        'numpy==1.26.4',
         'pandas==2.1.1',
-        'xlrd==2.0.1'
+        'rapidfuzz==3.6.1',
+        'xlrd==2.0.1',
+        'pyarrow==15.0.0'
     ],
     author='Zhenyuan Lu',
     author_email='lu.zhenyua@northeastern.edu',
@@ -20,7 +25,7 @@ setup(
     long_description_content_type="text/markdown",
     url='https://github.com/zhenyuanlu/pyKCN',
     classifiers=[
-        'Programming Language :: Python :: 3.11',
+        'Programming Language :: Python :: 3.12',
         'License :: OSI Approved :: MIT License',
         'Development Status :: 1 - Planning',
         'Intended Audience :: Science/Research'
