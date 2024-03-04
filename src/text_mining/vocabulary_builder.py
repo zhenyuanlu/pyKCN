@@ -10,6 +10,8 @@
 import pandas as pd
 from collections import defaultdict
 import ast
+import numpy as np
+
 
 class VocabularyBuilder:
     def __init__(self, dataframe: pd.DataFrame, vocab_column: str = 'stemmed_data', dict_columns: list = None):
@@ -46,22 +48,21 @@ class VocabularyBuilder:
         :return: Set of unique stemmed keywords.
         """
         vocab = set()
-        try:
-            for keywords_list_str in self.dataframe[self.vocab_column].dropna():
-                # Convert the string representation of the list to an actual list
-                # Using `ast.literal_eval` is safe for literal structures
-                keywords_list = ast.literal_eval(keywords_list_str)
-                # Ensure that it's a list before updating the vocabulary
-                if isinstance(keywords_list, list):
-                    vocab.update(keywords_list)
-                else:
-                    raise ValueError(f"Row in column '{self.vocab_column}' is not a list.")
-        except ValueError as e:
-            # This will catch errors from `ast.literal_eval`
-            raise ValueError(f"Error parsing string to list in column '{self.vocab_column}': {e}")
-        except Exception as e:
-            raise ValueError(f"Error building vocabulary from column '{self.vocab_column}': {e}")
+        for keywords_array in self.dataframe[self.vocab_column].dropna():
+            # Check if the data is in an array-like format and convert to list if necessary
+            if isinstance(keywords_array, list):
+                keywords_list = keywords_array
+            elif hasattr(keywords_array, 'tolist'):  # Check for NumPy arrays or similar
+                keywords_list = keywords_array.tolist()
+            else:
+                raise TypeError(f"Unsupported data type in column '{self.vocab_column}': {type(keywords_array)}")
+
+            for phrase in keywords_list:
+                # Assuming each phrase is a string of keywords separated by spaces
+                words = phrase.split()
+                vocab.update(words)
         return vocab
+
 
     def build_dictionary(self):
         """
@@ -73,13 +74,28 @@ class VocabularyBuilder:
         stemmed_col, original_col = self.dict_columns
         try:
             for _, row in self.dataframe[[stemmed_col, original_col]].dropna().iterrows():
-                stemmed_keywords = row[stemmed_col]
-                original_keywords = row[original_col]
+                # Ensure stemmed_keywords is a list of strings (individual keywords)
+                stemmed_keywords = np.atleast_1d(row[stemmed_col]).tolist()
+                # Ensure original_keywords is processed as a list
+                original_keywords = np.atleast_1d(row[original_col]).tolist()
+
                 for stemmed_keyword in stemmed_keywords:
-                    dictionary[stemmed_keyword].add(original_keywords)
+                    # Here we ensure stemmed_keyword is treated as a string for hashing purposes
+                    if isinstance(stemmed_keyword, list):
+                        # This should not happen if your data is structured correctly;
+                        # stemmed_keywords should be a single keyword string per list element.
+                        continue  # or handle appropriately
+
+                    # Adding each original keyword to the set for this stemmed keyword
+                    for original_keyword in original_keywords:
+                        dictionary[stemmed_keyword].add(original_keyword)
         except Exception as e:
             raise ValueError(f"Error building dictionary from columns '{self.dict_columns}': {e}")
+
+        # Convert sets to lists for consistent output
         dictionary = {key: list(value) for key, value in dictionary.items()}
         return dictionary
+
+
 
 
