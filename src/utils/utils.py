@@ -1,6 +1,7 @@
 import os
 import re
 import pandas as pd
+import numpy as np
 import logging
 import json
 import glob
@@ -45,6 +46,11 @@ def save_data_from_prep(data: pd.DataFrame,
     :return: None
     """
     try:
+        for col in data.columns:
+            if data[col].apply(lambda x: isinstance(x, (list, np.ndarray))).any():
+                # Convert column elements directly to lists if they are numpy arrays
+                data[col] = data[col].apply(lambda x: list(x) if isinstance(x, np.ndarray) else x)
+
         output_data_dir = os.path.join(create_output_data_dir(root_path), pipeline_name)
         os.makedirs(output_data_dir, exist_ok = True)
 
