@@ -234,6 +234,9 @@ class TextProcessor(BaseProcessor):
             if self.cache_location:
                 self.save_cached_data('stemming')
 
+        if self.cache_location:
+            self.save_cached_data('final_processed')
+
         return self.dataframe
 
     def execute_primary_pipeline(self):
