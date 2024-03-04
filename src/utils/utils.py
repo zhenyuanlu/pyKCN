@@ -27,7 +27,7 @@ def create_output_data_dir(root_path: str) -> str:
     # Path to the new 'output_data' directory
     output_data_dir = os.path.join(root_dir, OUTPUT_DATA_FOLDER_NAME)
     # Create the directory if it doesn't exist
-    os.makedirs(output_data_dir, exist_ok = True)
+    os.makedirs(output_data_dir, exist_ok=True)
 
     return output_data_dir
 
@@ -53,12 +53,12 @@ def save_data_from_prep(data: pd.DataFrame,
                 data[col] = data[col].apply(lambda x: list(x) if isinstance(x, np.ndarray) else x)
 
         output_data_dir = os.path.join(create_output_data_dir(root_path), pipeline_name)
-        os.makedirs(output_data_dir, exist_ok = True)
+        os.makedirs(output_data_dir, exist_ok=True)
 
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
         filename = f"{data_type}_{timestamp}"
         file_path = os.path.join(output_data_dir, f"{filename}.csv")
-        data.to_csv(file_path, index = False)
+        data.to_csv(file_path, index=False)
 
         metadata = {
             'pipeline_name': pipeline_name,
@@ -117,7 +117,7 @@ def load_data_from_prep(pipeline_name: str = None,
                 return None
 
             # Extract timestamps from filenames and sort files based on the timestamps
-            files.sort(key = lambda f: re.search(r'(\d{8}_\d{6})', f).group(), reverse = True)
+            files.sort(key=lambda f: re.search(r'(\d{8}_\d{6})', f).group(), reverse=True)
             file_path = files[0]  # the first file is the latest file
 
         if os.path.exists(file_path):
@@ -140,4 +140,3 @@ def is_package_installed(pkg_name: str, error_msg: str = None) -> bool:
         if error_msg:
             raise ImportError(error_msg)
         return False
-
