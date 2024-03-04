@@ -198,12 +198,13 @@ class TextProcessor(BaseProcessor):
         self.cache_location = cache_location
         self.cache_format = cache_format.lower()
 
-    def execute_processor(self, run_primary = True, run_stemming = True) -> pd.DataFrame:
+    def execute_processor(self, run_primary = True, run_stemming = True, run_process = True) -> pd.DataFrame:
         """
         Execute the text processing pipeline.
 
         :param run_primary: If run the primary pipeline.
         :param run_stemming: If run the stemming pipeline.
+        :param run_process: If run the final processing.
         :return: Processed DataFrame.
         """
         new_col_name = self.new_col_name
@@ -224,6 +225,11 @@ class TextProcessor(BaseProcessor):
                     self.dataframe = cached_data
                     run_stemming = False
 
+            if run_process:
+                cached_data = self.load_cached_data('final_processed')
+                if cached_data is not None:
+                    run_process = False
+
         if run_primary:
             self.execute_primary_pipeline()
             if self.cache_location:
@@ -233,6 +239,10 @@ class TextProcessor(BaseProcessor):
             self.execute_stemming_pipeline()
             if self.cache_location:
                 self.save_cached_data('stemming')
+
+        if run_process:
+            if self.cache_location:
+                self.save_cached_data('final_processed')
 
         return self.dataframe
 
