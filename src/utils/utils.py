@@ -174,6 +174,7 @@ def load_parquet_from_prep(pipeline_name: str = None,
         logging.error(f"An error occurred while loading Parquet data: {e}")
         return None
 
+
 def is_package_installed(pkg_name: str, error_msg: str = None) -> bool:
     try:
         importlib.import_module(pkg_name)
