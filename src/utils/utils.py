@@ -132,6 +132,48 @@ def load_data_from_prep(pipeline_name: str = None,
         return None
 
 
+def load_parquet_from_prep(pipeline_name: str = None,
+                           data_type: str = None,
+                           root_path: str = None,
+                           filename: str = None) -> pd.DataFrame | None:
+    """
+    Load the extracted data from a Parquet file in the 'output_data' directory.
+
+    :param pipeline_name: Name of the data pipeline.
+    :param data_type: Type of data (e.g., 'extracted_data', 'removed_duplicates').
+    :param root_path: The root path for loading data.
+    :param filename: The name of the file to be loaded with extension.
+    :return: The loaded data as a pandas DataFrame.
+    """
+    try:
+        file_path = None
+        if filename:
+            file_path = os.path.join(root_path, filename)
+        else:
+            pipeline_dir = os.path.join(root_path, pipeline_name)
+            file_pattern = f"*{data_type}*.parquet"
+            files = glob.glob(os.path.join(pipeline_dir, file_pattern))
+
+            if not files:
+                logging.error(f"No Parquet files found with data type '{data_type}' in '{pipeline_dir}'")
+                return None
+
+            # Extract timestamps from filenames and get the latest file
+            timestamp_pattern = r'(\d{8}_\d{6})'
+            latest_file = max(files, key=lambda f: re.search(timestamp_pattern, f).group())
+            file_path = latest_file
+
+        if os.path.exists(file_path):
+            df = pd.read_parquet(file_path)
+            return df
+        else:
+            logging.error(f"No such file: '{file_path}'")
+            return None
+
+    except Exception as e:
+        logging.error(f"An error occurred while loading Parquet data: {e}")
+        return None
+
 def is_package_installed(pkg_name: str, error_msg: str = None) -> bool:
     try:
         importlib.import_module(pkg_name)
