@@ -6,3 +6,7 @@ scripts/
 docs/
 _test/
 data/
+__pycache__/
+*.pyc
+*.log
+.DS_Store
