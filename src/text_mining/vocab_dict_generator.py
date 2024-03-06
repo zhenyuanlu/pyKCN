@@ -8,10 +8,13 @@ import pandas as pd
 # dictionary = keyword_processor.dictionary  # Access the dictionary
 """
 from collections import defaultdict, Counter
+import numpy as np
 
 
 class VocabDictBuilder:
-    def __init__(self, dataframe, original_col='col_2', stemmed_col='stemmed_data'):
+    def __init__(self, dataframe,
+                 original_col: str = 'original_data',
+                 stemmed_col: str = 'stemmed_data') -> None:
         """
         Initialize the KeywordProcessor with the given DataFrame.
 
@@ -34,11 +37,26 @@ class VocabDictBuilder:
         Gather data for both vocabulary and dictionary from the DataFrame in one pass.
         """
         for _, row in self.dataframe.iterrows():
-            original_keywords = row[self.original_col].split('; ')
-            stemmed_keywords = row[self.stemmed_col]
+            original_keywords = self._split_keywords(row[self.original_col])
+            stemmed_keywords = self._split_keywords(row[self.stemmed_col])
             for stemmed_keyword, original_keyword in zip(stemmed_keywords, original_keywords):
                 self.stemmed_to_originals[stemmed_keyword].add(original_keyword)
                 self.all_stemmed[stemmed_keyword] += 1
+
+    @staticmethod
+    def _split_keywords(keywords):
+        """
+        Helper function to split keywords based on the data structure.
+
+        :param keywords: numpy array or list of keywords.
+        :return: list of keywords.
+        """
+        if isinstance(keywords, list):
+            return keywords
+        elif isinstance(keywords, np.ndarray):
+            return keywords.tolist()
+        else:
+            raise ValueError(f"Unsupported data structure: {type(keywords)}")
 
     def _create_vocabulary(self):
         """
@@ -55,6 +73,4 @@ class VocabDictBuilder:
         :return: dictionary mapping stemmed to original keywords.
         """
         # Convert sets to lists for consistency
-        return {stemmed: list(originals) for stemmed, originals in self.stemmed_to_originals.items()}
-
-
+        return {stemmed: {original} for stemmed, originals in self.stemmed_to_originals.items() for original in originals}
