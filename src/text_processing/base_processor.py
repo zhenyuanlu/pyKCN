@@ -70,6 +70,7 @@ class BaseProcessor:
         self.stemmer = PorterStemmer()
 
         self.ensure_stopwords_installed(self)
+        self.ensure_punkt_installed(self)
 
         self.stop_words = set(stopwords.words('english'))
 
@@ -91,6 +92,23 @@ class BaseProcessor:
         self.STRING_TO_LIST_METHODS = {}
         # For methods that convert lists to strings, e.g. hyphenated terms.
         self.LIST_TO_STRING_METHODS = {self._handle_hyphens_in_single_token}
+
+    @staticmethod
+    def ensure_punkt_installed(self):
+        """
+        Ensures that the NLTK punkt tokenizer dataset is downloaded and available.
+        It checks if the dataset is present, and if not, it downloads it.
+        """
+        try:
+            # Check if punkt tokenizer is available
+            nltk.data.find('tokenizers/punkt')
+        except LookupError:
+            # If not available, download punkt tokenizer dataset
+            print("NLTK punkt tokenizer dataset not found, downloading...")
+            nltk.download('punkt')
+            print("Download complete.")
+        else:
+            print("NLTK punkt tokenizer dataset is already installed.")
 
     @staticmethod
     def ensure_stopwords_installed(self):
