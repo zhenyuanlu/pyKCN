@@ -87,4 +87,4 @@ Email: lu.zhenyua[at]northeastern[dot]edu
 
 ## License
 
-This project is licensed under the terms of the MIT license.
+This project is licensed under the terms of the [MIT license](LICENSE).
