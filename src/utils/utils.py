@@ -75,6 +75,43 @@ def save_data_from_prep(data: pd.DataFrame,
         logging.error(f"An error occurred while saving extracted data: {e}")
 
 
+def save_data_to_json(data, pipeline_name: str, data_type: str, root_path: str) -> None:
+    """
+    Save the vocabulary or dictionary data to a JSON file, converting sets to lists for serialization.
+
+    :param data: The data to be saved (vocabulary or dictionary).
+    :param pipeline_name: Name of the data pipeline.
+    :param data_type: Type of data ('vocab' or 'dict').
+    :param root_path: The target path for storing data.
+    :return: None
+    """
+    if not isinstance(data, (set, dict)):
+        raise TypeError(f"Data must be a set or dict, not {type(data).__name__}.")
+
+    # Ensure data is in a serializable format (convert sets to lists)
+    if isinstance(data, set):
+        data = list(data)  # Convert set to list if it's a vocabulary
+    elif isinstance(data, dict):
+        data = {k: list(v) if isinstance(v, set) else v for k, v in
+                data.items()}  # Convert sets to lists in dictionaries
+
+    try:
+        output_data_dir = os.path.join(root_path, pipeline_name)
+        os.makedirs(output_data_dir, exist_ok = True)
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        filename = f"cache_{data_type}_{timestamp}.json"
+        file_path = os.path.join(output_data_dir, filename)
+
+        with open(file_path, 'w') as f:
+            json.dump(data, f, ensure_ascii = False, indent = 4)
+
+        print(f"{data_type.capitalize()} data successfully saved to {file_path}")
+
+    except Exception as e:
+        logging.error(f"An error occurred while saving {data_type} data: {e}")
+
+
 def update_metadata_from_prep(metadata: dict, filename: str, output_data_dir: str) -> None:
     """
     Update metadata file of the new generated output data.
@@ -146,7 +183,7 @@ def load_parquet_from_prep(pipeline_name: str = None,
     :return: The loaded data as a pandas DataFrame.
     """
     try:
-        file_path = None
+
         if filename:
             file_path = os.path.join(root_path, filename)
         else:
