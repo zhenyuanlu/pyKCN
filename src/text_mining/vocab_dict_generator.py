@@ -3,7 +3,7 @@
 # Example usage
 import pandas as pd
 # df = pd.DataFrame([...])
-# keyword_processor = KeywordProcessor(df)
+# keyword_processor = VocabDictBuilder(df)
 # vocabulary = keyword_processor.vocabulary  # Access the vocabulary
 # dictionary = keyword_processor.dictionary  # Access the dictionary
 """
@@ -32,7 +32,7 @@ class VocabDictBuilder:
         self.vocabulary = self._create_vocabulary()
         self.dictionary = self._create_dictionary()
 
-    def _gather_data(self):
+    def _gather_data(self) -> None:
         """
         Gather data for both vocabulary and dictionary from the DataFrame in one pass.
         """
@@ -44,7 +44,7 @@ class VocabDictBuilder:
                 self.all_stemmed[stemmed_keyword] += 1
 
     @staticmethod
-    def _split_keywords(keywords):
+    def _split_keywords(keywords) -> list:
         """
         Helper function to split keywords based on the data structure.
 
@@ -58,7 +58,7 @@ class VocabDictBuilder:
         else:
             raise ValueError(f"Unsupported data structure: {type(keywords)}")
 
-    def _create_vocabulary(self):
+    def _create_vocabulary(self) -> set:
         """
         Create a set of unique stemmed keywords based on gathered data.
 
@@ -66,11 +66,12 @@ class VocabDictBuilder:
         """
         return set(self.all_stemmed.keys())
 
-    def _create_dictionary(self):
+    def _create_dictionary(self) -> dict:
         """
         Create a mapping from stemmed keywords to original keywords based on gathered data.
 
         :return: dictionary mapping stemmed to original keywords.
         """
         # Convert sets to lists for consistency
-        return {stemmed: {original} for stemmed, originals in self.stemmed_to_originals.items() for original in originals}
+        return {stemmed: {original} for stemmed, originals in self.stemmed_to_originals.items() for original in
+                originals}
