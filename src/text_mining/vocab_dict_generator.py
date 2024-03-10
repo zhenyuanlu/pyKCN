@@ -8,6 +8,8 @@ import pandas as pd
 # dictionary = keyword_processor.dictionary  # Access the dictionary
 """
 from collections import defaultdict, Counter
+from tqdm import tqdm
+
 import numpy as np
 import re
 
@@ -36,8 +38,9 @@ class VocabDictBuilder:
         """
         Gather data for both vocabulary and dictionary from the DataFrame in one pass.
         """
-        for _, row in self.dataframe.iterrows():
-            original_keywords = self._ensure_list_format(row[self.original_col], is_original=True)
+        for _, row in tqdm(self.dataframe.iterrows(), total = len(self.dataframe),
+                           desc = "Processing rows"):
+            original_keywords = self._ensure_list_format(row[self.original_col], is_original = True)
             stemmed_keywords = self._ensure_list_format(row[self.stemmed_col])
             for stemmed_keyword, original_keyword in zip(stemmed_keywords, original_keywords):
                 self.stemmed_to_originals[stemmed_keyword].add(original_keyword)
