@@ -157,13 +157,15 @@ class TextProcessor(BaseProcessor):
     DEFAULT_STEMMING_PIPELINE = {
         'original_data': [
             {"description": "Rejoining Original Terms...", "function": "rejoin_terms", "args": {}},
-            {"description": "Filtering by Length...", "function": "filter_by_length", "args": {}},
+            # TODO - Filter by length may cause issues
+            # {"description": "Filtering by Length...", "function": "filter_by_length", "args": {}},
             {"description": "Cleaning Original Terms...", "function": "cleanup", "args": {}},
         ],
         'stemmed_data': [
             {"description": "Stemming...", "function": "stem_tokens", "args": {}},
             {"description": "Rejoining Stemmed Terms...", "function": "rejoin_terms", "args": {}},
-            {"description": "Filtering by Length...", "function": "filter_by_length", "args": {}},
+            # TODO - Filter by length may cause issues
+            # {"description": "Filtering by Length...", "function": "filter_by_length", "args": {}},
             {"description": "Cleaning Stemmed Terms...", "function": "cleanup", "args": {}},
         ]
     }
