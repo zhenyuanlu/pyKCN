@@ -151,8 +151,6 @@ class TextProcessor(BaseProcessor):
 
             {"description": "Removing Punctuation...", "function": "remove_punctuation",
              "args": {"punctuation_type": "default"}},
-
-            {"description": "Filtering by Length...", "function": "filter_by_length", "args": {}},
         ]
     }
 
@@ -236,6 +234,7 @@ class TextProcessor(BaseProcessor):
 
         if run_primary:
             self.execute_primary_pipeline()
+            print(self.dataframe)
             if self.cache_location:
                 self.save_cached_data('primary')
 

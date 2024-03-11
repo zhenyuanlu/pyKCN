@@ -427,7 +427,11 @@ class BaseProcessor:
         return processed_tokens
 
     def _filter_by_length_single_token(self, token: str) -> str:
-        return token if len(token) > self.word_len_threshold else ''
+        if len(token) > self.word_len_threshold:
+            return token
+        else:
+            print(f"Token '{token}' filtered out by the length filter.")
+            return ''
 
     def _remove_numbers_from_single_token(self, token: str, pattern_type: str) -> str:
         """
