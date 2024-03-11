@@ -427,7 +427,11 @@ class BaseProcessor:
         return processed_tokens
 
     def _filter_by_length_single_token(self, token: str) -> str:
-        return token if len(token) > self.word_len_threshold else ''
+        if len(token) > self.word_len_threshold:
+            return token
+        else:
+            print(f"Token '{token}' filtered out by the length filter.")
+            return ''
 
     def _remove_numbers_from_single_token(self, token: str, pattern_type: str) -> str:
         """
@@ -464,7 +468,12 @@ class BaseProcessor:
         return cleaned_token
 
     def _stem_single_token(self, token: str) -> str:
-        return self.stemmer.stem(token) if self.stemmer else token
+        stemmed_token = self.stemmer.stem(token) if self.stemmer else token
+        if len(stemmed_token) <= 2:
+            print(f"Token '{token}' filtered out by the stemming filter.")
+            return token
+        else:
+            return stemmed_token
 
     @staticmethod
     def _to_lowercase_single_string(text: str) -> str:

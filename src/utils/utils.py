@@ -106,6 +106,15 @@ def save_data_to_json(data, pipeline_name: str, data_type: str, root_path: str) 
         with open(file_path, 'w') as f:
             json.dump(data, f, ensure_ascii = False, indent = 4)
 
+        metadata = {
+            'pipeline_name': pipeline_name,
+            'data_type': data_type,
+            'filename': f"{data_type}_{timestamp}.json",
+            'path': str(file_path),
+            'timestamp': timestamp
+        }
+        update_metadata_from_prep(metadata, filename, output_data_dir)
+
         print(f"{data_type.capitalize()} data successfully saved to {file_path}")
 
     except Exception as e:
