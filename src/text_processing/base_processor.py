@@ -468,7 +468,11 @@ class BaseProcessor:
         return cleaned_token
 
     def _stem_single_token(self, token: str) -> str:
-        return self.stemmer.stem(token) if self.stemmer else token
+        stemmed_token = self.stemmer.stem(token) if self.stemmer else token
+        if len(stemmed_token) <= 1:
+            return token
+        else:
+            return stemmed_token
 
     @staticmethod
     def _to_lowercase_single_string(text: str) -> str:

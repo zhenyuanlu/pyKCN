@@ -234,12 +234,12 @@ class TextProcessor(BaseProcessor):
 
         if run_primary:
             self.execute_primary_pipeline()
-            print(self.dataframe)
             if self.cache_location:
                 self.save_cached_data('primary')
 
         if run_stemming:
             self.execute_stemming_pipeline()
+            print(self.dataframe)
             if self.cache_location:
                 self.save_cached_data('stemming')
 
