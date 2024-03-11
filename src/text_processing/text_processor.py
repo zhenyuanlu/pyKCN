@@ -151,6 +151,8 @@ class TextProcessor(BaseProcessor):
 
             {"description": "Removing Punctuation...", "function": "remove_punctuation",
              "args": {"punctuation_type": "default"}},
+
+            {"description": "Filtering by Length...", "function": "filter_by_length", "args": {}},
         ]
     }
 
@@ -242,11 +244,30 @@ class TextProcessor(BaseProcessor):
             if self.cache_location:
                 self.save_cached_data('stemming')
 
+            self.check_length_consistency()
+
         if run_process:
             if self.cache_location:
                 self.save_cached_data('final_processed')
 
         return self.dataframe
+
+    def check_length_consistency(self) -> None:
+        """
+        Check if the length between primary and stemmed data is the same for each pair.
+        Print out the pairs that don't match.
+
+        :return: None
+        """
+        original_data = self.dataframe['original_data']
+        stemmed_data = self.dataframe['stemmed_data']
+
+        for idx, (original, stemmed) in enumerate(zip(original_data, stemmed_data)):
+            if len(original) != len(stemmed):
+                print(f"Length mismatch at index {idx}:")
+                print(f"Original: {original}")
+                print(f"Stemmed: {stemmed}")
+                print()
 
     def execute_primary_pipeline(self):
         """
