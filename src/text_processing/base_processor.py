@@ -469,7 +469,8 @@ class BaseProcessor:
 
     def _stem_single_token(self, token: str) -> str:
         stemmed_token = self.stemmer.stem(token) if self.stemmer else token
-        if len(stemmed_token) <= 1:
+        if len(stemmed_token) <= 2:
+            print(f"Token '{token}' filtered out by the stemming filter.")
             return token
         else:
             return stemmed_token
