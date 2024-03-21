@@ -175,20 +175,20 @@ class TextProcessor(BaseProcessor):
                  columns_to_process: list[str],
                  date_column: str = 'date_col',
                  deduplication_threshold: float = 1.0,
-                 new_col_name = 'text_col',
+                 new_col_name='text_col',
                  word_len_threshold: int = 2,
                  primary_pipeline: list[dict] = None,
                  stemming_pipeline: list[dict] = None,
                  cache_location: str = None,
                  fill_na: str = None,
                  cache_format: str = 'csv'):
-        super().__init__(dataframe = dataframe,
-                         columns_to_process = columns_to_process,
-                         date_column = date_column,
-                         deduplication_threshold = deduplication_threshold,
-                         word_len_threshold = word_len_threshold,
-                         fill_na = fill_na)
-        self.handle_nan(mode_type = 'processing')
+        super().__init__(dataframe=dataframe,
+                         columns_to_process=columns_to_process,
+                         date_column=date_column,
+                         deduplication_threshold=deduplication_threshold,
+                         word_len_threshold=word_len_threshold,
+                         fill_na=fill_na)
+        self.handle_nan(mode_type='processing')
         self.new_col_name = new_col_name
 
         self.PRIMARY_PIPELINE = primary_pipeline or self.DEFAULT_PRIMARY_PIPELINE
@@ -200,7 +200,7 @@ class TextProcessor(BaseProcessor):
         self.cache_location = cache_location
         self.cache_format = cache_format.lower()
 
-    def execute_processor(self, run_primary = True, run_stemming = True, run_process = True) -> pd.DataFrame:
+    def execute_processor(self, run_primary=True, run_stemming=True, run_process=True) -> pd.DataFrame:
         """
         Execute the text processing pipeline.
 
@@ -210,7 +210,7 @@ class TextProcessor(BaseProcessor):
         :return: Processed DataFrame.
         """
         new_col_name = self.new_col_name
-        self.combine_columns(self.columns_to_process, new_col_name = new_col_name)
+        self.combine_columns(self.columns_to_process, new_col_name=new_col_name)
 
         if self.cache_location:
             # Check for cached primary data
@@ -239,7 +239,6 @@ class TextProcessor(BaseProcessor):
 
         if run_stemming:
             self.execute_stemming_pipeline()
-            print(self.dataframe)
             if self.cache_location:
                 self.save_cached_data('stemming')
 
@@ -299,7 +298,7 @@ class TextProcessor(BaseProcessor):
         # Drop the columns that are not needed
         cols_to_keep = self.columns_to_process + ['original_data', 'stemmed_data', 'date_col']
         cols_to_drop = set(self.dataframe.columns) - set(cols_to_keep)
-        self.dataframe.drop(columns = cols_to_drop, inplace = True)
+        self.dataframe.drop(columns=cols_to_drop, inplace=True)
 
         self.stemming_pipeline_data = self.dataframe.copy()
         # logging.debug(f"Columns after primary pipeline: {self.dataframe.columns}")
@@ -333,7 +332,7 @@ class TextProcessor(BaseProcessor):
         cache_file_path = self.get_cache_file_path(pipeline_type)
 
         if self.cache_format == 'csv':
-            self.dataframe.to_csv(cache_file_path, index = False)
+            self.dataframe.to_csv(cache_file_path, index=False)
         elif self.cache_format == 'parquet':
             self._handle_parquet_format()
             self.dataframe.to_parquet(cache_file_path)
@@ -357,7 +356,7 @@ class TextProcessor(BaseProcessor):
             return None
 
         # Sort cache files by timestamp and pick the latest
-        latest_cache_file = sorted(cache_files, key = self.extract_timestamp)[-1]
+        latest_cache_file = sorted(cache_files, key=self.extract_timestamp)[-1]
         cache_file_path = os.path.join(self.cache_location, latest_cache_file)
 
         if self.cache_format == "csv":
