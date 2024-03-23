@@ -6,7 +6,7 @@ import logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 
 
-def split_into_time_windows(df, split_column, start_value=None, end_value=None, window_size=None, num_windows=None):
+def split_group_windows(df, split_column, start_value=None, end_value=None, window_size=None, num_windows=None):
     """
     Split the DataFrame into time windows based on a specified column, with optional
     start and end values, and either a specific window size or number of windows.
