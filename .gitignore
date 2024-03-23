@@ -6,7 +6,6 @@ scripts/
 docs/
 _test/
 data/
-__pycache__/
 **/__pycache__/
 *.pyc
 *.log
