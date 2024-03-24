@@ -65,14 +65,6 @@ xlrd==2.0.1
 pyarrow==15.0.0 (optional)
 ```
 
-## TODO List
-
-```
-- [x] NCBI API
-- [ ] Cooccurrence matrix generator
-- [ ] Keyword cooccurrence network (KCN) analysis
-...
-```
 
 ## Reference
 
