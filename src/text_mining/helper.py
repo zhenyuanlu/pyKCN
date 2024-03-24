@@ -1,6 +1,7 @@
 import pandas as pd
 import numpy as np
 import logging
+import json
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
@@ -77,3 +78,22 @@ def split_group_windows(df, split_column, start_value=None, end_value=None, wind
 
     return windows
 
+
+def load_vocabulary(vocab_file_path: str):
+    """
+    Load vocabulary from a JSON file and create an index mapping.
+
+    :param vocab_file_path: Path to the vocabulary file.
+    :return: A tuple of the loaded vocabulary and the index mapping.
+    """
+    try:
+        with open(vocab_file_path, 'r', encoding = 'utf-8') as file:
+            vocab = json.load(file)
+    except FileNotFoundError:
+        raise ValueError(f"The file {vocab_file_path} does not exist.")
+    except json.JSONDecodeError:
+        raise ValueError(f"The file {vocab_file_path} is not a valid JSON file.")
+
+    index_map = {word: idx for idx, word in enumerate(vocab)}
+
+    return vocab, index_map

@@ -68,7 +68,7 @@ pyarrow==15.0.0 (optional)
 ## TODO List
 
 ```
-- [ ] NCBI API
+- [x] NCBI API
 - [ ] Cooccurrence matrix generator
 - [ ] Keyword cooccurrence network (KCN) analysis
 ...
