@@ -15,12 +15,14 @@
 <a href="https://img.shields.io/badge/version-0.1.0-blue" target="_blank">
     <img src="https://img.shields.io/badge/version-0.1.0-blue" alt="Version">
 </a>
+<!--
 <a href="https://pypi.org/project/pykcn" target="_blank">
     <img src="https://img.shields.io/pypi/v/pykcn?color=%2334D058&label=pypi%20package" alt="Package version">
 </a>
 <a href="https://pypi.org/project/pykcn" target="_blank">
     <img src="https://img.shields.io/pypi/pyversions/pykcn.svg?color=%2334D058" alt="Supported Python versions">
 </a>
+-->
 </p>
 
 ---
