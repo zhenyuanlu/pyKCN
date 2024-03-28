@@ -29,6 +29,11 @@
 
 <br/>
 
+[pyKCN: A <em>Python</em> Tool for Bridging Scientific](https://arxiv.org/abs/2403.16157)
+<b>Zhenyuan Lu</b>, Wei Li, Burcu Ozek, Haozhou Zhou, Srinivasan Radhakrishnan, Sagar Kamarthi
+
+<br/>
+
 Our team has previously published a series of related papers that laid the groundwork for the development of this tool. Here are those publications:
 
 - [Novel keyword co-occurrence network-based methods to foster systematic reviews of scientific literature](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0172778)\
@@ -70,9 +75,14 @@ pyarrow==15.0.0 (optional)
 
 ## Reference
 
-If you find our study useful, please cite our paper on XXX:
+If you find our study useful, please cite our paper on arxiv:
 ```
-reference here
+@article{lu2024pykcn,
+  title={pyKCN: A Python Tool for Bridging Scientific Knowledge},
+  author={Lu, Zhenyuan and Li, Wei and Ozek, Burcu and Zhou, Haozhou and Radhakrishnan, Srinivasan and Kamarthi, Sagar},
+  journal={arXiv preprint arXiv:2403.16157},
+  year={2024}
+}
 ```
 
 ## Author
