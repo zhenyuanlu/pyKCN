@@ -29,7 +29,7 @@
 
 <br/>
 
-[pyKCN: A <em>Python</em> Tool for Bridging Scientific](https://arxiv.org/abs/2403.16157)
+[pyKCN: A <em>Python</em> Tool for Bridging Scientific](https://arxiv.org/abs/2403.16157)\
 <b>Zhenyuan Lu</b>, Wei Li, Burcu Ozek, Haozhou Zhou, Srinivasan Radhakrishnan, Sagar Kamarthi
 
 <br/>
