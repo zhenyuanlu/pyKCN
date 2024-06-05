@@ -50,4 +50,4 @@ jobs:
           git config --global user.email 'github-actions@github.com'
           git add README.md article_citations.json badge_urls.json
           git commit -m "docs: update article citation badges"
-          git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
+          git push "https://${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:${{ github.ref }}
