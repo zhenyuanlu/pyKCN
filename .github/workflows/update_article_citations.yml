@@ -31,18 +31,17 @@ jobs:
 
       - name: Update README with badges
         run: |
-          BADGE_URLS=$(cat badge_urls.json)
-          echo "Updating README.md with new badge URLs..."
-          for row in $(echo "${BADGE_URLS}" | jq -r 'to_entries[] | @base64'); do
-            _jq() {
-              echo ${row} | base64 --decode | jq -r ${1}
-            }
-            TITLE=$(_jq '.key')
-            URL=$(_jq '.value')
-            TITLE_ESCAPED=$(echo $TITLE | sed 's/ /%20/g')
-            ESCAPED_TITLE=$(echo $TITLE | sed -e 's/[\/&]/\\&/g')
-            sed -i "s|!\[$ESCAPED_TITLE Citations\](.*)|!\[$ESCAPED_TITLE Citations\]\($URL\)|" README.md
-          done
+          # Read the badge_urls.json file
+          badge_urls=$(jq -r 'to_entries | map("\(.key)=\(.value|tostring)") | join(",")' badge_urls.json)
+          
+          # Update the badge URLs in the README file
+          while IFS=',' read -ra badges; do
+            for badge in "${badges[@]}"; do
+              IFS='=' read -r title url <<< "$badge"
+              escaped_title=$(echo "$title" | sed 's/[^a-zA-Z0-9 ]//g' | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+              sed -i "s|!\[$title Citations\](.*)|!\[$title Citations\]($url)|" README.md
+            done
+          done <<< "$badge_urls"
 
       - name: Commit and push changes
         env:
