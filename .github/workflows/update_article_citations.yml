@@ -13,17 +13,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-        with:
-          node-version: '20'  # Specify Node.js version 20
 
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: '3.12'
 
-      - name: Install dependencies
+      - name: Install Node.js packages
         run: |
-          npm install -g scholarly requests  # Install Node.js packages globally
+          npm install -g scholarly requests
 
       - name: Fetch Google Scholar article citations
         run: python scripts/fetch_article_citations.py
