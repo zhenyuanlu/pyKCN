@@ -1,0 +1,45 @@
+name: Update Article Citation Badges
+
+on:
+  schedule:
+    - cron: '0 0 * * *'  # Runs daily at midnight
+  workflow_dispatch:  # Allows manual triggering of the workflow
+
+jobs:
+  update-article-citations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install scholarly requests
+
+      - name: Fetch Google Scholar article citations
+        run: python scripts/fetch_article_citations.py
+
+      - name: Update README with badges
+        run: |
+          BADGE_URLS=$(cat badge_urls.json)
+          for row in $(echo "${BADGE_URLS}" | jq -r 'to_entries[] | @base64'); do
+            _jq() {
+              echo ${row} | base64 --decode | jq -r ${1}
+            }
+            TITLE=$(_jq '.key')
+            URL=$(_jq '.value')
+            TITLE_ESCAPED=$(echo $TITLE | sed 's/ /%20/g')
+            sed -i "s|!\[$TITLE Citations\](.*)|!\[$TITLE Citations\]\($URL\)|" README.md
+          done
+
+      - name: Commit and push changes
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git add README.md
+          git commit -m "docs: update article citation badges"
+          git push
