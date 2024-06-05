@@ -13,10 +13,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3  # Ensure it's the latest version for Node.js 20 support
-      - name: Fetch Google Scholar article citations
-        env:
-          SERPAPI_API_KEY: ${{ secrets.SERPAPI_API_KEY }}
-        run: python scripts/fetch_article_citations.py
 
       - name: Set up Python
         uses: actions/setup-python@v4  # Ensure it's the latest version for Node.js 20 support
