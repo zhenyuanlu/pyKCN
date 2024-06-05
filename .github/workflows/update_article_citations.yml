@@ -12,10 +12,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3  # Ensure it's the latest version for Node.js 20 support
+        uses: actions/checkout@v3
 
       - name: Set up Python
-        uses: actions/setup-python@v4  # Ensure it's the latest version for Node.js 20 support
+        uses: actions/setup-python@v4
         with:
           python-version: '3.12'
 
@@ -52,8 +52,8 @@ jobs:
             TITLE_ESCAPED=$(echo $TITLE | sed 's/ /%20/g')
             ESCAPED_TITLE=$(echo $TITLE | sed -e 's/[\/&]/\\&/g')
             echo "Replacing badge for article: $TITLE with URL: $URL"
-            echo "Pattern: ![$ESCAPED_TITLE Citations](https://img.shields.io/badge/Citations-[0-9]*-blue)"
-            sed -i "s|!\[$ESCAPED_TITLE Citations\](https://img.shields.io/badge/Citations-[0-9]*-blue)|!\[$ESCAPED_TITLE Citations\]\($URL\)|g" README.md
+            echo "Pattern: ![${ESCAPED_TITLE} Citations](https://img.shields.io/badge/Citations-[0-9]*-blue)"
+            sed -i "s|!\[${ESCAPED_TITLE} Citations\](https://img.shields.io/badge/Citations-[0-9]*-blue)|!\[${ESCAPED_TITLE} Citations\](${URL})|g" README.md
           done
           echo "Updated README.md content:"
           cat README.md
