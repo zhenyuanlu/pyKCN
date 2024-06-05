@@ -23,17 +23,7 @@
     <img src="https://img.shields.io/pypi/pyversions/pykcn.svg?color=%2334D058" alt="Supported Python versions">
 </a>
 -->
-</p>
-- [Novel keyword co-occurrence network-based methods to foster systematic reviews of scientific literature](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0172778) ![Novel keyword co-occurrence network-based methods to foster systematic reviews of scientific literature Citations](https://img.shields.io/badge/Citations-0-blue) \
-  Srinivasan Radhakrishnan, Serkan Erbis, Jacqueline A. Isaacs, Sagar Kamarthi
-- [Analysis of pain research literature through keyword Co-occurrence networks](https://journals.plos.org/digitalhealth/article?id=10.1371/journal.pdig.0000331) ![Analysis of pain research literature through keyword Co-occurrence networks Citations](https://img.shields.io/badge/Citations-0-blue) \
-  Burcu Ozek, **Zhenyuan Lu**, Fatemeh Pouromran, Srinivasan Radhakrishnan, Sagar Kamarthi
-- [Trends in adopting industry 4.0 for asset life cycle management for sustainability: a keyword Co-occurrence network review and analysis](https://www.mdpi.com/2071-1050/14/19/12233) ![Trends in adopting industry 4.0 for asset life cycle management for sustainability: a keyword Co-occurrence network review and analysis Citations](https://img.shields.io/badge/Citations-0-blue) \
-  Sachini Weerasekara, **Zhenyuan Lu**, Burcu Ozek, Jacqueline Isaacs, Sagar Kamarthi
-- [Navigating the Evolution of Digital Twins Research through Keyword Co-Occurence Network Analysis](https://www.mdpi.com/1424-8220/24/4/1202) ![Navigating the Evolution of Digital Twins Research through Keyword Co-Occurence Network Analysis Citations](https://img.shields.io/badge/Citations-0-blue) \
-  Wei Li, Haozhou Zhou, **Zhenyuan Lu**, Sagar Kamarthi
 
-<!-- The article citation badges will be updated by the GitHub Actions workflow -->
 ---
 
 <br/>
