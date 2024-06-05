@@ -1,5 +1,9 @@
-from scholarly import scholarly
+from serpapi import GoogleSearch
 import json
+import os
+
+# SerpApi API key
+api_key = os.environ["SERPAPI_API_KEY"]
 
 # List of article titles to track
 articles_to_track = [
@@ -12,9 +16,25 @@ articles_to_track = [
 # Fetch citation counts for each article
 citation_counts = {}
 for article_title in articles_to_track:
-    search_query = scholarly.search_pubs(article_title)
-    article = next(search_query)
-    citation_counts[article_title] = article['num_citations']
+    try:
+        params = {
+            "api_key": api_key,
+            "engine": "google_scholar",
+            "q": article_title
+        }
+        search = GoogleSearch(params)
+        results = search.get_dict()
+
+        if "organic_results" in results:
+            article = results["organic_results"][0]
+            citation_count = article.get("inline_links", {}).get("cited_by", {}).get("total", 0)
+            citation_counts[article_title] = citation_count
+        else:
+            print(f"No results found for: {article_title}")
+
+    except Exception as e:
+        print(f"Error occurred for article: {article_title}")
+        print(f"Error message: {str(e)}")
 
 # Save to a JSON file
 with open('article_citations.json', 'w') as f:
