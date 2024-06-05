@@ -3,10 +3,8 @@ name: Update Article Citation Badges
 on:
   push:
     branches:
-      - main
       - dev
-  schedule:
-    - cron: '0 0 * * *'  # Runs daily at midnight
+      - main
   workflow_dispatch:  # Allows manual triggering of the workflow
 
 jobs:
@@ -15,6 +13,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+        with:
+          node-version: '20'  # Specify Node.js version 20
 
       - name: Set up Python
         uses: actions/setup-python@v2
@@ -22,7 +22,8 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install scholarly requests
+        run: |
+          npm install -g scholarly requests  # Install Node.js packages globally
 
       - name: Fetch Google Scholar article citations
         run: python scripts/fetch_article_citations.py
