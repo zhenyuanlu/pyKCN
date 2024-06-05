@@ -47,7 +47,7 @@ jobs:
             URL=$(_jq '.value')
             TITLE_ESCAPED=$(echo $TITLE | sed 's/ /%20/g')
             ESCAPED_TITLE=$(echo $TITLE | sed -e 's/[\/&]/\\&/g')
-            sed -i "s|!\[$ESCAPED_TITLE Citations\](.*)|!\[$ESCAPED_TITLE Citations\]\($URL\)|" README.md
+            sed -i "s|!\[$ESCAPED_TITLE Citations\](https://img.shields.io/badge/Citations-[0-9]*-blue)|!\[$ESCAPED_TITLE Citations\]\($URL\)|" README.md
           done
           echo "README.md after update:"
           cat README.md
