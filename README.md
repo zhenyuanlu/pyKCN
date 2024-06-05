@@ -42,7 +42,7 @@ Our team has previously published a series of related papers that laid the groun
 - [Trends in adopting industry 4.0 for asset life cycle management for sustainability: a keyword Co-occurrence 
   network review and analysis](https://www.mdpi.com/2071-1050/14/19/12233) ![Trends in adopting Industry 4.0 for asset life cycle management for sustainability: a keyword co-occurrence network review and analysis Citations](https://img.shields.io/badge/Citations-0-blue) \
   Sachini Weerasekara, **Zhenyuan Lu**, Burcu Ozek, Jacqueline Isaacs, Sagar Kamarthi
-- [Navigating the Evolution of Digital Twins Research through Keyword Co-Occurence Network Analysis](https://www.mdpi.com/1424-8220/24/4/1202) ![Navigating the Evolution of Digital Twins Research through Keyword Co-Occurence Network Analysis Citations](https://img.shields.io/badge/Citations-0-blue) \
+- [Navigating the Evolution of Digital Twins Research through Keyword Co-Occurence Network Analysis](https://www.mdpi.com/1424-8220/24/4/1202) ![Navigating the Evolution of Digital Twins Research through Keyword Co-Occurence Network Analysis Citations](https://img.shields.io/badge/Citations-1-blue) \
   Wei Li, Haozhou Zhou, **Zhenyuan Lu**, Sagar Kamarthi
 
 <br/>
