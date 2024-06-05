@@ -1,6 +1,10 @@
 name: Update Article Citation Badges
 
 on:
+  push:
+    branches:
+      - main
+      - dev
   schedule:
     - cron: '0 0 * * *'  # Runs daily at midnight
   workflow_dispatch:  # Allows manual triggering of the workflow
