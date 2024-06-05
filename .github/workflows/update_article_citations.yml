@@ -20,7 +20,7 @@ jobs:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: pip install scholarly requests
+        run: pip install scholarly requests jq
 
       - name: Fetch Google Scholar article citations
         run: python scripts/fetch_article_citations.py
