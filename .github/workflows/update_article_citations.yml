@@ -29,14 +29,18 @@ jobs:
           SERPAPI_API_KEY: ${{ secrets.SERPAPI_API_KEY }}
         run: python scripts/fetch_article_citations.py
 
+      - name: Display badge_urls.json content
+        run: |
+          echo "Contents of badge_urls.json:"
+          cat badge_urls.json
+
+      - name: Display initial README.md content
+        run: |
+          echo "Initial README.md content:"
+          cat README.md
+
       - name: Update README with badges
         run: |
-          echo "Current directory: $(pwd)"
-          ls -la
-          echo "Badge URLs:"
-          cat badge_urls.json
-          echo "README.md before update:"
-          cat README.md
           BADGE_URLS=$(cat badge_urls.json)
           echo "Updating README.md with new badge URLs..."
           for row in $(echo "${BADGE_URLS}" | jq -r 'to_entries[] | @base64'); do
@@ -47,9 +51,11 @@ jobs:
             URL=$(_jq '.value')
             TITLE_ESCAPED=$(echo $TITLE | sed 's/ /%20/g')
             ESCAPED_TITLE=$(echo $TITLE | sed -e 's/[\/&]/\\&/g')
-            sed -i "s|!\[$ESCAPED_TITLE Citations\](https://img.shields.io/badge/Citations-[0-9]*-blue)|!\[$ESCAPED_TITLE Citations\]\($URL\)|" README.md
+            echo "Replacing badge for article: $TITLE with URL: $URL"
+            echo "Pattern: ![$ESCAPED_TITLE Citations](https://img.shields.io/badge/Citations-[0-9]*-blue)"
+            sed -i "s|!\[$ESCAPED_TITLE Citations\](https://img.shields.io/badge/Citations-[0-9]*-blue)|!\[$ESCAPED_TITLE Citations\]\($URL\)|g" README.md
           done
-          echo "README.md after update:"
+          echo "Updated README.md content:"
           cat README.md
 
       - name: Commit and push changes
