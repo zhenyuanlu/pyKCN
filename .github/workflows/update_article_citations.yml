@@ -32,6 +32,7 @@ jobs:
       - name: Update README with badges
         run: |
           BADGE_URLS=$(cat badge_urls.json)
+          echo "Updating README.md with new badge URLs..."
           for row in $(echo "${BADGE_URLS}" | jq -r 'to_entries[] | @base64'); do
             _jq() {
               echo ${row} | base64 --decode | jq -r ${1}
@@ -39,8 +40,12 @@ jobs:
             TITLE=$(_jq '.key')
             URL=$(_jq '.value')
             TITLE_ESCAPED=$(echo $TITLE | sed 's/ /%20/g')
-            sed -i "s|!\[$TITLE Citations\](.*)|!\[$TITLE Citations\]\($URL\)|" README.md
+            # Escape special characters in TITLE for safe use in sed command
+            ESCAPED_TITLE=$(echo $TITLE | sed -e 's/[\/&]/\\&/g')
+            # Replace the citation badge URL in the README.md file
+            sed -i "s|!\[$ESCAPED_TITLE Citations\](.*)|!\[$ESCAPED_TITLE Citations\]\($URL\)|" README.md
           done
+          echo "README.md updated."
 
       - name: Commit and push changes
         env:
