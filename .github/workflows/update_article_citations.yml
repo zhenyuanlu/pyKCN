@@ -25,6 +25,8 @@ jobs:
           pip install requests google-search-results
 
       - name: Fetch Google Scholar article citations
+        env:
+          SERPAPI_API_KEY: ${{ secrets.SERPAPI_API_KEY }}
         run: python scripts/fetch_article_citations.py
 
       - name: Update README with badges
