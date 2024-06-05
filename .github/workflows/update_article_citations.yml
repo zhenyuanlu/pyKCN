@@ -12,16 +12,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3  # Updated to v3 for Node.js 20 support
 
       - name: Set up Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4  # Updated to v4 for Node.js 20 support
         with:
           python-version: '3.12'
 
-      - name: Install Node.js packages
-        run: |
-          npm install -g scholarly requests
+      - name: Install dependencies
+        run: pip install scholarly requests
 
       - name: Fetch Google Scholar article citations
         run: python scripts/fetch_article_citations.py
