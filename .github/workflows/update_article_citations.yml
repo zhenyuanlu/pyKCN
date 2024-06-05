@@ -45,7 +45,6 @@ jobs:
             # Replace the citation badge URL in the README.md file
             sed -i "s|!\[$ESCAPED_TITLE Citations\](.*)|!\[$ESCAPED_TITLE Citations\]\($URL\)|" README.md
           done
-          echo "README.md updated."
 
       - name: Commit and push changes
         env:
