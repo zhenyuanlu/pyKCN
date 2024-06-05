@@ -43,9 +43,11 @@ jobs:
           done
 
       - name: Commit and push changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
           git config --global user.name 'github-actions'
           git config --global user.email 'github-actions@github.com'
           git add README.md article_citations.json badge_urls.json
           git commit -m "docs: update article citation badges"
-          git push
+          git push https://x-access-token:${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }}
