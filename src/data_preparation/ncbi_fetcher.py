@@ -102,7 +102,7 @@ class NCBIFetcher:
         handle.close()
         return {row['DbName']: row['Count'] for row in record['eGQueryResult']}
 
-    def download_pubmed_data(self, batch_size: int = 1000, date_range: int = 1) -> None:
+    def download_pubmed_data(self, batch_size: int = 5000, date_range: int = 1) -> None:
         """
         Download the data from the specified NCBI databases in batches.
         :param batch_size: The batch size for fetching records. Default is 1000.
