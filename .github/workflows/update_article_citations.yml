@@ -1,0 +1,69 @@
+name: Update Article Citation Badges
+
+on:
+  push:
+    branches:
+      - dev
+      - main
+  workflow_dispatch:  # Allows manual triggering of the workflow
+
+jobs:
+  update-article-citations:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y jq
+          pip install requests google-search-results
+
+      - name: Fetch Google Scholar article citations
+        env:
+          SERPAPI_API_KEY: ${{ secrets.SERPAPI_API_KEY }}
+        run: python scripts/fetch_article_citations.py
+
+      - name: Display badge_urls.json content
+        run: |
+          echo "Contents of badge_urls.json:"
+          cat badge_urls.json
+
+      - name: Display initial README.md content
+        run: |
+          echo "Initial README.md content:"
+          cat README.md
+
+      - name: Update README with badges
+        run: |
+          BADGE_URLS=$(cat badge_urls.json)
+          echo "Updating README.md with new badge URLs..."
+          for row in $(echo "${BADGE_URLS}" | jq -r 'to_entries[] | @base64'); do
+            _jq() {
+              echo ${row} | base64 --decode | jq -r ${1}
+            }
+            TITLE=$(_jq '.key')
+            URL=$(_jq '.value')
+            TITLE_ESCAPED=$(echo $TITLE | sed 's/ /%20/g')
+            ESCAPED_TITLE=$(echo $TITLE | sed -e 's/[\/&]/\\&/g')
+            echo "Replacing badge for article: $TITLE with URL: $URL"
+            echo "Pattern: ![${ESCAPED_TITLE} Citations](https://img.shields.io/badge/Citations-[0-9]*-blue)"
+            sed -i "s|!\[${ESCAPED_TITLE} Citations\](https://img.shields.io/badge/Citations-[0-9]*-blue)|!\[${ESCAPED_TITLE} Citations\](${URL})|g" README.md
+          done
+          echo "Updated README.md content:"
+          cat README.md
+
+      - name: Commit and push changes
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        run: |
+          git config --global user.name 'github-actions'
+          git config --global user.email 'github-actions@github.com'
+          git add README.md article_citations.json badge_urls.json
+          git commit -m "docs: update article citation badges"
+          git push "https://${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git" HEAD:${{ github.ref }}
