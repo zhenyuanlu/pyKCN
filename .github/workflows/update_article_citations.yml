@@ -58,7 +58,20 @@ jobs:
           echo "Updated README.md content:"
           cat README.md
 
+      - name: Check for changes
+        id: check_changes
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "No changes detected."
+            echo "::set-output name=changes_detected::false"
+          else
+            echo "Changes detected."
+            echo "::set-output name=changes_detected::true"
+          fi
+
       - name: Commit and push changes
+        if: steps.check_changes.outputs.changes_detected == 'true'
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
         run: |
