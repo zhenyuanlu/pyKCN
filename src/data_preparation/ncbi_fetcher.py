@@ -37,7 +37,6 @@ fetcher.save_data_to_csv(column_names=DEFAULT_COLUMNS)
 # TODO make the code more modular
 
 
-
 import os
 import pandas as pd
 from Bio import Entrez, Medline
