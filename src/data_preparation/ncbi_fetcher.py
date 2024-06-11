@@ -179,10 +179,10 @@ class NCBIFetcher:
             df = pd.DataFrame(article)
             df.to_csv(output_file, encoding='utf-8', index=False)
 
-    def fetch_all(self):
+    def fetch_all(self, column_names: list[str] = None) -> None:
         """
         Fetch data from the specified NCBI databases, download the records, and save the data to a CSV file.
         :return: None
         """
         self._download_pubmed_data()
-        self._save_data_to_csv()
+        self._save_data_to_csv(column_names=column_names)
