@@ -24,18 +24,11 @@ fetcher = NCBIFetcher(email=email,
                       query=query,
                       database=databases,
                       root_path=root_path)
-# Query database counts (optional)
-# counts = fetcher.query_database_counts()
-# print(counts)
 # Download the data from the databases
 fetcher.download_pubmed_data()
 # Save the downloaded data to CSV
 fetcher.save_data_to_csv(column_names=DEFAULT_COLUMNS)
 """
-
-# TODO add timestamp to the filename
-# TODO make the code more modular
-
 
 import os
 import pandas as pd
@@ -92,17 +85,7 @@ class NCBIFetcher:
         Entrez.email = email
         Entrez.api_key = api_key
 
-    def query_database_counts(self) -> dict:
-        """
-        Query the specified NCBI databases to get the count of records for the given query.
-        :return: A dictionary containing the database names and the count of records.
-        """
-        handle = Entrez.egquery(term=self.query)
-        record = Entrez.read(handle)
-        handle.close()
-        return {row['DbName']: row['Count'] for row in record['eGQueryResult']}
-
-    def download_pubmed_data(self, batch_size: int = 5000, date_range: int = 1) -> None:
+    def _download_pubmed_data(self, batch_size: int = 5000, date_range: int = 1) -> None:
         """
         Download the data from the specified NCBI databases in batches.
         :param batch_size: The batch size for fetching records. Default is 1000.
@@ -136,7 +119,7 @@ class NCBIFetcher:
                                                    f"{db}_{current_start_year}-{current_end_year}_batch_{start + 1}_to_{end}.txt")
                         print(
                             f"Fetching records {start + 1} to {end} from {db} for years {current_start_year}-{current_end_year}...")
-                        print(f"Using WebEnv: {webenv}, QueryKey: {query_key}, Start: {start}, End: {end}")
+                        print(f"Using WebEnv: {webenv}, QueryKey: {query_key}, Start: {start + 1} , End: {end}")
                         success = False
                         attempts = 0
                         while not success and attempts < 5:  # Retry logic
@@ -170,7 +153,7 @@ class NCBIFetcher:
 
                 current_start_year += date_range
 
-    def save_data_to_csv(self, column_names: list[str] = None) -> None:
+    def _save_data_to_csv(self, column_names: list[str] = None) -> None:
         """
         Save the downloaded data to a CSV file with the specified column names.
         :param column_names: The list of column names to include in the CSV file. Default is ['TI', 'OT', 'AB', 'DP'].
@@ -196,3 +179,10 @@ class NCBIFetcher:
             df = pd.DataFrame(article)
             df.to_csv(output_file, encoding='utf-8', index=False)
 
+    def fetch_all(self, column_names: list[str] = None) -> None:
+        """
+        Fetch data from the specified NCBI databases, download the records, and save the data to a CSV file.
+        :return: None
+        """
+        self._download_pubmed_data()
+        self._save_data_to_csv(column_names=column_names)
