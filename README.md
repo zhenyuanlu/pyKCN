@@ -88,6 +88,8 @@ If you find our study useful, please cite our paper on arxiv:
 [Zhenyuan Lu](https://zhenyuanlu.com/)\
 Email: lu.zhenyua[at]northeastern[dot]edu
 
+---
+
 ## License
 
 This project is licensed under the terms of the [MIT license](LICENSE).
