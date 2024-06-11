@@ -18,7 +18,7 @@ from ncbi_fetcher import NCBIFetcher
 email = "your@email.com"
 query = "(example[TI] OR example[OT] OR example[AB])"
 databases = ['database1', 'database2']
-root_path = r"to\your\desired\path\ncbi_data"
+root_path = r"to\\your\\desired\\path\\ncbi_data"
 # Initialize the NCBIFetcher with the specified parameters
 fetcher = NCBIFetcher(email=email,
                       query=query,
