@@ -11,7 +11,7 @@ setup(
     install_requires=[
         # List dependencies here:
         'biopython==1.83',
-        'nltk==3.8.1',
+        'nltk==3.9',
         'numpy==1.26.4',
         'pandas==2.1.1',
         'rapidfuzz==3.6.1',
